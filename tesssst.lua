@@ -859,8 +859,8 @@ local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.co
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE EventModule
---local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubevent.lua"))()
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
+local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubevent.lua"))()
+--local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
 --DEV MODE2 
 -- local EventModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
