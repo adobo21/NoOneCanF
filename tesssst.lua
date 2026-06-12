@@ -859,7 +859,7 @@ local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.co
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE EventModule
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubevent.lua"))()
+local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event.lua"))()
 --local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
 --DEV MODE2 
 -- local EventModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
@@ -869,11 +869,13 @@ local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 --DEV MODE2 
 -- local TraderModule = loadstring(game:HttpGet("https://pastebin.com/raw/evwpQQfM"))()
 
-
 --LIVE PlantsModule
 local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/plants.lua"))()
 --DEV MODE2 
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
+
+--Live CraftModule
+local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
 
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
@@ -890,9 +892,13 @@ LoadoutsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon,
 
 PlantsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, allSeedsData, allSeedsOnly, equipFruitById)
 
-EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, allSeedsData, allSeedsOnly, equipFruitById)
+CraftModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
+
+EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
+
 
 TraderModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, sendPetDataWebhook)
+
 
 local Misc = Window:CreateTab("Misc", "code")
 local workspace = game:GetService("Workspace")
