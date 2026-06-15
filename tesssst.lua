@@ -859,7 +859,7 @@ local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.co
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE EventModule
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event.lua"))()
+local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event2.lua"))()
 --local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
 --DEV MODE2 
 -- local EventModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
@@ -876,7 +876,6 @@ local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 
 --Live CraftModule
 local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
-
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
@@ -895,7 +894,6 @@ PlantsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, e
 CraftModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
 EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
-
 
 TraderModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, sendPetDataWebhook)
 
