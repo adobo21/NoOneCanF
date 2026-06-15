@@ -858,12 +858,6 @@ local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.co
 --DEV MODE 2
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
---LIVE EventModule
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event2.lua"))()
---local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
---DEV MODE2 
--- local EventModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
-
 --LIVE TraderModule
 local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/trader.lua"))()
 --DEV MODE2 
@@ -875,7 +869,7 @@ local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --Live CraftModule
-local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
+local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting2.lua"))()
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
@@ -893,7 +887,7 @@ PlantsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, e
 
 CraftModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
-EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
+--EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
 TraderModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, sendPetDataWebhook)
 
@@ -3787,9 +3781,6 @@ Misc:CreateToggle({
 })
 
 
-
-
-
 local autoLowGraphicsEnabled = false
 local autoLowGraphicsThreads = {} -- store multiple threads
 Misc:CreateToggle({
@@ -3868,76 +3859,54 @@ Misc:CreateToggle({
 })
 
 
-local autoLowGraphicsEnabled = false
-local cleanConnection = nil
-
--- Efficient function to strip intensive lag elements on sight
-local function cleanLaggyInstance(v)
-	if not autoLowGraphicsEnabled then return end
-	
-	-- 1. Catch original and newly updated environmental lag items (Webs, Fireworks, Frost blocks)
-	if v.Name == "SpiderWebFX" or v.Name == "JulyFirework" or v.Name == "Snowflake" then
-		task.defer(function() v:Destroy() end)
-		return
-	end
-
-	-- 2. Performance asset culling (Materials, Textures, Decals, & Particles)
-	if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
-		v:Destroy()
-	elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Fire") or v:IsA("Smoke") then
-		v.Enabled = false
-	elseif v:IsA("MeshPart") then
-		v.TextureID = ""
-		v.Material = Enum.Material.Plastic
-		v.CastShadow = false
-	elseif v:IsA("UnionOperation") then
-		v.Material = Enum.Material.Plastic
-		v.CastShadow = false
-	elseif v:IsA("BasePart") then
-		v.CastShadow = false
-		-- Do not modify transparency of your own character models
-		if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
-			-- Targets massive player gardens/crop models to reduce GPU strain
-			if v.Name == "Glimmer" or v.Parent.Name == "Pets" or v:IsDescendantOf(workspace:FindFirstChild("PlayerGardens") or workspace) then
-				v.LocalTransparencyModifier = 0.5
-			end
-		end
-	elseif v:IsA("BillboardGui") or v:IsA("SurfaceGui") then
-		-- Hides floating text indicators (damage/mutation/sell values) which kill FPS
-		v.Enabled = false
-	end
-end
+local autoLowGraphicsEnabledUltra = false
+local autoLowGraphicsEnabledUltraThreads = {}
 
 Misc:CreateToggle({
-	Name = "More Reduce Lag (Updated)",
+	Name = "More lag reduce",
 	CurrentValue = false,
-	Flag = "reduceLag",
+	Flag = "reduceLagMore",
 	Callback = function(Value)
-		autoLowGraphicsEnabled = Value
-		
-		if autoLowGraphicsEnabled then
-			beastHubNotify("Reduce Lag Active", "Optimizing garden assets...", 3)
-			
-			-- Instantly clean everything currently existing in the workspace
-			for _, descendant in ipairs(workspace:GetDescendants()) do
-				cleanLaggyInstance(descendant)
+		autoLowGraphicsEnabledUltra = Value
+		if autoLowGraphicsEnabledUltra then
+			if autoLowGraphicsEnabledUltraThreads.assets then
+				return
 			end
-			
-			-- Event driven: Instantly cleans newly spawned crops, particles, and items without using endless loops
-			cleanConnection = workspace.DescendantAdded:Connect(function(descendant)
-				cleanLaggyInstance(descendant)
+
+			local function applyUltraAssetCull()
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+						v:Destroy()
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+						v.Enabled = false
+					elseif v:IsA("MeshPart") then
+						v.TextureID = ""
+						v.Material = Enum.Material.Plastic
+						v.CastShadow = false
+					elseif v:IsA("UnionOperation") then
+						v:Destroy()
+					elseif v:IsA("BasePart") then
+						if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
+							v.LocalTransparencyModifier = 0.6
+							v.CastShadow = false
+						end
+					end
+				end
+			end
+
+			autoLowGraphicsEnabledUltraThreads.assets = task.spawn(function()
+				while autoLowGraphicsEnabledUltra do
+					applyUltraAssetCull()
+					task.wait(60)
+				end
+				autoLowGraphicsEnabledUltraThreads.assets = nil
 			end)
 		else
-			-- Clean up the connection to completely stop background execution when toggled off
-			if cleanConnection then
-				cleanConnection:Disconnect()
-				cleanConnection = nil
-			end
-			beastHubNotify("Reduce Lag Disabled", "Restart or rejoin to restore graphics.", 3)
+			autoLowGraphicsEnabledUltra = false
+			autoLowGraphicsEnabledUltraThreads = {}
 		end
 	end,
 })
-
 
 
 Misc:CreateToggle({
