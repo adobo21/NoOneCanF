@@ -869,7 +869,7 @@ local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --Live CraftModule
-local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting2.lua"))()
+local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
