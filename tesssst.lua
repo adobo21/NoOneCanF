@@ -871,6 +871,8 @@ local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/
 --Live CraftModule
 local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
 
+local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event.lua"))()
+
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
 local Shops = Window:CreateTab("Shops", "circle-dollar-sign")
@@ -887,7 +889,7 @@ PlantsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, e
 
 CraftModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
---EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
+EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
 TraderModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, sendPetDataWebhook)
 
