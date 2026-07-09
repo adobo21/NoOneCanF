@@ -2,12 +2,12 @@ if not getgenv().BeastHubRayfield then
     getgenv().BeastHubRayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 end
 local Rayfield = getgenv().BeastHubRayfield
-local beastHubIcon = 88823002331312
+local beastHubIcon = 109838189843903
 
 -- local isVerified = ...  -- grab the passed value
 local isVerified = getgenv()._bh_isVerified
-local expiryText=isVerified==true and "lifetime" or (isVerified and tostring(isVerified) or "no value")
-local scriptTitle = "BeastHub | Exp: "..expiryText
+local expiryText=isVerified==true and "lifetime" or (isVerified and tostring(isVerified) or "Lifetime")
+local scriptTitle = "BeastHubXDevsHub | Exp: "..expiryText
 if getgenv().BeastHubLoaded then
     if Rayfield then
         Rayfield:Notify({
@@ -34,7 +34,7 @@ if not getgenv().BeastHubFunctions then
 end
 local myFunctions = getgenv().BeastHubFunctions
 --
-local luckGUI = myFunctions.createLuckGUI()
+--local luckGUI = myFunctions.createLuckGUI()
 
 -- ================== MAIN ==================
 local Window = Rayfield:CreateWindow({
@@ -95,86 +95,86 @@ local function sendDiscordWebhook(webhookUrl, message)
 end
 
 local function sendDiscordWebhookEmbedHatchMonitoring(webhookUrl,koiRefundCount,sealsRefundCount,hatchSpeed,curEggName,eggCount)
-        local Players = game:GetService("Players")
-        local HttpService = game:GetService("HttpService")
-        if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-                warn("Invalid webhook URL")
-                return
-        end
-        local player = Players.LocalPlayer
-        if not player then
-                warn("Player not found")
-                return
-        end
+	local Players = game:GetService("Players")
+	local HttpService = game:GetService("HttpService")
+	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+		warn("Invalid webhook URL")
+		return
+	end
+	local player = Players.LocalPlayer
+	if not player then
+		warn("Player not found")
+		return
+	end
 
-        -- Build Roblox Thumbnails API URL
-        local apiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..player.UserId.."&size=150x150&format=Png&isCircular=true"
+	-- Build Roblox Thumbnails API URL
+	local apiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..player.UserId.."&size=150x150&format=Png&isCircular=true"
 
-        local req = syn and syn.request or http_request or request
-        if not req then
-                warn("HTTP request not supported")
-                return
-        end
+	local req = syn and syn.request or http_request or request
+	if not req then
+		warn("HTTP request not supported")
+		return
+	end
 
-        local avatarUrl
-        local success, response = pcall(function()
-                return req({Url = apiUrl, Method = "GET"})
-        end)
+	local avatarUrl
+	local success, response = pcall(function()
+		return req({Url = apiUrl, Method = "GET"})
+	end)
 
-        if success and response and response.Body then
-                local data = HttpService:JSONDecode(response.Body)
-                if data.data[1] and data.data[1].imageUrl then
-                        avatarUrl = data.data[1].imageUrl
-                else
-                        warn("Thumbnail not ready yet, imageUrl is nil")
-                end
-        else
-                warn("Failed to fetch thumbnail from Roblox API")
-        end
+	if success and response and response.Body then
+		local data = HttpService:JSONDecode(response.Body)
+		if data.data[1] and data.data[1].imageUrl then
+			avatarUrl = data.data[1].imageUrl
+		else
+			warn("Thumbnail not ready yet, imageUrl is nil")
+		end
+	else
+		warn("Failed to fetch thumbnail from Roblox API")
+	end
 
-        local embedData = {
-                title = "BHUB Hatch Monitoring",
-                color = 9511939,
-                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-                fields = {
-                        {
-                                name = "Player",
-                                value = "||"..player.Name.."||",
-                                inline = true
-                        },
-                        {
-                                name = "Egg",
-                                value = "Name: "..curEggName.." | "..eggCount.."\nSpeed: "..hatchSpeed,
-                                inline = true
-                        },
-                        {
-                                name = "Refunds",
-                                value = "Koi: "..tostring(koiRefundCount).."\nSeals: "..tostring(sealsRefundCount),
-                                inline = true
-                        }
-                }
-        }
+	local embedData = {
+		title = "BHUB Hatch Monitoring",
+		color = 9511939,
+		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+		fields = {
+			{
+				name = "Player",
+				value = "||"..player.Name.."||",
+				inline = true
+			},
+			{
+				name = "Egg",
+				value = "Name: "..curEggName.." | "..eggCount.."\nSpeed: "..hatchSpeed,
+				inline = true
+			},
+			{
+				name = "Refunds",
+				value = "Koi: "..tostring(koiRefundCount).."\nSeals: "..tostring(sealsRefundCount),
+				inline = true
+			}
+		}
+	}
 
-        if avatarUrl then
-                embedData.thumbnail = {url = avatarUrl}
-        end
+	if avatarUrl then
+		embedData.thumbnail = {url = avatarUrl}
+	end
 
-        local payload = HttpService:JSONEncode({embeds = {embedData}})
+	local payload = HttpService:JSONEncode({embeds = {embedData}})
 
-        pcall(function()
-                req({
-                        Url = webhookUrl,
-                        Method = "POST",
-                        Headers = {["Content-Type"] = "application/json"},
-                        Body = payload
-                })
-        end)
+	pcall(function()
+		req({
+			Url = webhookUrl,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = payload
+		})
+	end)
 end
 
 local function sendPetDataWebhook(webhookUrl, petName, kgMode, baseKG, price, seller)
-        local Players = game:GetService("Players")
-        local HttpService = game:GetService("HttpService")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Players = game:GetService("Players")
+	local HttpService = game:GetService("HttpService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local prefix
     if kgMode == "above" then
         prefix = ">"
@@ -182,206 +182,206 @@ local function sendPetDataWebhook(webhookUrl, petName, kgMode, baseKG, price, se
         prefix = "<"
     end
 
-        if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-                warn("Invalid webhook URL")
-                return
-        end
+	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+		warn("Invalid webhook URL")
+		return
+	end
 
-        local player = Players.LocalPlayer
-        if not player then
-                warn("Player not found")
-                return
-        end
+	local player = Players.LocalPlayer
+	if not player then
+		warn("Player not found")
+		return
+	end
 
-        local PetModule = require(
-                ReplicatedStorage
-                        :WaitForChild("Modules")
-                        :WaitForChild("GardenGuideModules")
-                        :WaitForChild("DataModules")
-                        :WaitForChild("PetData")
-        )
+	local PetModule = require(
+		ReplicatedStorage
+			:WaitForChild("Modules")
+			:WaitForChild("GardenGuideModules")
+			:WaitForChild("DataModules")
+			:WaitForChild("PetData")
+	)
 
-        if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
-                warn("Pet not found in module")
-                return
-        end
+	if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
+		warn("Pet not found in module")
+		return
+	end
 
-        local petInfo = PetModule.Data[petName]
-        local imageId = petInfo.ImageId
-        local numericId
-        if type(imageId) == "string" then
-                numericId = string.match(imageId, "%d+")
-        elseif type(imageId) == "number" then
-                numericId = tostring(imageId)
-        end
+	local petInfo = PetModule.Data[petName]
+	local imageId = petInfo.ImageId
+	local numericId
+	if type(imageId) == "string" then
+		numericId = string.match(imageId, "%d+")
+	elseif type(imageId) == "number" then
+		numericId = tostring(imageId)
+	end
 
-        local thumbnailUrl
-        if numericId then
-                local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
-                local req = syn and syn.request or http_request or request
-                if req then
-                        local success, response = pcall(function()
-                                return req({
-                                        Url = thumbEndpoint,
-                                        Method = "GET"
-                                })
-                        end)
-                        if success and response and response.Body then
-                                local decoded = HttpService:JSONDecode(response.Body)
-                                if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-                                        thumbnailUrl = decoded.data[1].imageUrl
-                                end
-                        end
-                end
-        end
+	local thumbnailUrl
+	if numericId then
+		local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
+		local req = syn and syn.request or http_request or request
+		if req then
+			local success, response = pcall(function()
+				return req({
+					Url = thumbEndpoint,
+					Method = "GET"
+				})
+			end)
+			if success and response and response.Body then
+				local decoded = HttpService:JSONDecode(response.Body)
+				if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+					thumbnailUrl = decoded.data[1].imageUrl
+				end
+			end
+		end
+	end
 
-        local embedData = {
-                -- title = petInfo.Name or petName,
-                title = "BeastHub Sniper! "..(petInfo.Name or petName),
-                description = petInfo.Description or "No description",
-                color = 16744192,
-                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-                fields = {
-                        {
-                                name = "Rarity",
-                                value = tostring(petInfo.Rarity),
-                                inline = true
-                        },
-                        {
-                                name = "Base KG",
-                                value = prefix..baseKG,
-                                inline = true
-                        },
-                        {
-                                name = "Price",
-                                value = price,
-                                inline = true
-                        },
-                        {
-                                name = "Seller",
-                                value = "||"..seller.."||",
-                                inline = true
-                        }
-                }
-        }
+	local embedData = {
+		-- title = petInfo.Name or petName,
+		title = "BeastHub Sniper! "..(petInfo.Name or petName),
+		description = petInfo.Description or "No description",
+		color = 16744192,
+		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+		fields = {
+			{
+				name = "Rarity",
+				value = tostring(petInfo.Rarity),
+				inline = true
+			},
+			{
+				name = "Base KG",
+				value = prefix..baseKG,
+				inline = true
+			},
+			{
+				name = "Price",
+				value = price,
+				inline = true
+			},
+			{
+				name = "Seller",
+				value = "||"..seller.."||",
+				inline = true
+			}
+		}
+	}
 
-        if thumbnailUrl then
-                embedData.thumbnail = {
-                        url = thumbnailUrl
-                }
-        end
+	if thumbnailUrl then
+		embedData.thumbnail = {
+			url = thumbnailUrl
+		}
+	end
 
-        local payload = HttpService:JSONEncode({
+	local payload = HttpService:JSONEncode({
         content = "@everyone",
         allowed_mentions = {
             parse = {"everyone"}
         },
-                embeds = {embedData}
-        })
+		embeds = {embedData}
+	})
 
-        local req = syn and syn.request or http_request or request
-        if not req then
-                warn("HTTP not supported")
-                return
-        end
+	local req = syn and syn.request or http_request or request
+	if not req then
+		warn("HTTP not supported")
+		return
+	end
 
-        pcall(function()
-                req({
-                        Url = webhookUrl,
-                        Method = "POST",
-                        Headers = {
-                                ["Content-Type"] = "application/json"
-                        },
-                        Body = payload
-                })
-        end)
+	pcall(function()
+		req({
+			Url = webhookUrl,
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json"
+			},
+			Body = payload
+		})
+	end)
 end
 
 local function sendWebhookHuge(webhookUrl, playerName, petName, curEggName, baseKG, desc)
-        local HttpService = game:GetService("HttpService")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local HttpService = game:GetService("HttpService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local baseNum = tonumber(baseKG)
     local brontoKG = baseNum and string.format("%.2f", baseNum * 1.3) or "N/A"
     local req = syn and syn.request or http_request or request
 
-        if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-                warn("Invalid webhook URL")
-                return
-        end
+	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+		warn("Invalid webhook URL")
+		return
+	end
 
-        local PetModule = require(
-                ReplicatedStorage
-                        :WaitForChild("Modules")
-                        :WaitForChild("GardenGuideModules")
-                        :WaitForChild("DataModules")
-                        :WaitForChild("PetData")
-        )
+	local PetModule = require(
+		ReplicatedStorage
+			:WaitForChild("Modules")
+			:WaitForChild("GardenGuideModules")
+			:WaitForChild("DataModules")
+			:WaitForChild("PetData")
+	)
 
-        if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
-                warn("Pet not found in module")
-                return
-        end
+	if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
+		warn("Pet not found in module")
+		return
+	end
 
-        local petInfo = PetModule.Data[petName]
-        local imageId = petInfo.ImageId
-        local numericId
-        if type(imageId) == "string" then
-                numericId = string.match(imageId, "%d+")
-        elseif type(imageId) == "number" then
-                numericId = tostring(imageId)
-        end
+	local petInfo = PetModule.Data[petName]
+	local imageId = petInfo.ImageId
+	local numericId
+	if type(imageId) == "string" then
+		numericId = string.match(imageId, "%d+")
+	elseif type(imageId) == "number" then
+		numericId = tostring(imageId)
+	end
 
-        local thumbnailUrl
-        if numericId then
-                local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
-                if req then
-                        local success, response = pcall(function()
-                                return req({
-                                        Url = thumbEndpoint,
-                                        Method = "GET"
-                                })
-                        end)
-                        if success and response and response.Body then
-                                local decoded = HttpService:JSONDecode(response.Body)
-                                if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-                                        thumbnailUrl = decoded.data[1].imageUrl
-                                end
-                        end
-                end
-        end
+	local thumbnailUrl
+	if numericId then
+		local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
+		if req then
+			local success, response = pcall(function()
+				return req({
+					Url = thumbEndpoint,
+					Method = "GET"
+				})
+			end)
+			if success and response and response.Body then
+				local decoded = HttpService:JSONDecode(response.Body)
+				if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+					thumbnailUrl = decoded.data[1].imageUrl
+				end
+			end
+		end
+	end
 
-        local embedData = {
-                -- title = petInfo.Name or petName,
-                title = "BeastHub Huge Hatch! " .. (petInfo.Name or petName),
-                description = tostring(curEggName).." | "..tostring(desc),
-                color = 52480,
-                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-                fields = {
+	local embedData = {
+		-- title = petInfo.Name or petName,
+		title = "BeastHub Huge Hatch! " .. (petInfo.Name or petName),
+		description = tostring(curEggName).." | "..tostring(desc),
+		color = 52480,
+		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+		fields = {
             {
-                                name = "Player",
-                                value = "||"..playerName.."||",
-                                inline = true
-                        },
-                        {
-                                name = "Rarity",
-                                value = tostring(petInfo.Rarity),
-                                inline = true
-                        },
-                        {
-                                name = "Base KG",
-                                value = tostring(baseKG).." ("..brontoKG.." if +30%)",
-                                inline = true
-                        }
-                }
-        }
+				name = "Player",
+				value = "||"..playerName.."||",
+				inline = true
+			},
+			{
+				name = "Rarity",
+				value = tostring(petInfo.Rarity),
+				inline = true
+			},
+			{
+				name = "Base KG",
+				value = tostring(baseKG).." ("..brontoKG.." if +30%)",
+				inline = true
+			}
+		}
+	}
 
-        if thumbnailUrl then
-                embedData.thumbnail = {
-                        url = thumbnailUrl
-                }
-        end
+	if thumbnailUrl then
+		embedData.thumbnail = {
+			url = thumbnailUrl
+		}
+	end
 
-        local payload = HttpService:JSONEncode({
+	local payload = HttpService:JSONEncode({
         content = "@everyone",
         allowed_mentions = {
             parse = {"everyone"}
@@ -389,21 +389,21 @@ local function sendWebhookHuge(webhookUrl, playerName, petName, curEggName, base
         embeds = {embedData}
     })
 
-        if not req then
-                warn("HTTP not supported")
-                return
-        end
+	if not req then
+		warn("HTTP not supported")
+		return
+	end
 
-        pcall(function()
-                req({
-                        Url = webhookUrl,
-                        Method = "POST",
-                        Headers = {
-                                ["Content-Type"] = "application/json"
-                        },
-                        Body = payload
-                })
-        end)
+	pcall(function()
+		req({
+			Url = webhookUrl,
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json"
+			},
+			Body = payload
+		})
+	end)
 end
 
 -- Safe Reload button
@@ -447,12 +447,12 @@ end
 local function equipItemByName(itemName)
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-        -- player.Character.Humanoid:UnequipTools() --unequip all first
+	-- player.Character.Humanoid:UnequipTools() --unequip all first
 
     for _, tool in ipairs(backpack:GetChildren()) do
         if tool:IsA("Tool") and string.find(tool.Name, itemName) then
             --print("Equipping:", tool.Name)
-                        player.Character.Humanoid:UnequipTools() --unequip all first
+			player.Character.Humanoid:UnequipTools() --unequip all first
             player.Character.Humanoid:EquipTool(tool)
             return true -- stop after first match
         end
@@ -461,40 +461,40 @@ local function equipItemByName(itemName)
 end
 
 local function equipItemByNameV2(itemName) --for eggs
-        local player = game.Players.LocalPlayer
-        local backpack = player:WaitForChild("Backpack")
-        -- player.Character.Humanoid:UnequipTools()
+	local player = game.Players.LocalPlayer
+	local backpack = player:WaitForChild("Backpack")
+	-- player.Character.Humanoid:UnequipTools()
 
-        for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                        local name = tool.Name
-                        local cleaned = string.match(name, "^(.-)%s+x%d+$") or name
+	for _, tool in ipairs(backpack:GetChildren()) do
+		if tool:IsA("Tool") then
+			local name = tool.Name
+			local cleaned = string.match(name, "^(.-)%s+x%d+$") or name
 
-                        if cleaned == itemName then
-                                -- player.Character.Humanoid:UnequipTools()
-                                player.Character.Humanoid:EquipTool(tool)
-                                return true
-                        end
-                end
-        end
-        return false
+			if cleaned == itemName then
+				-- player.Character.Humanoid:UnequipTools()
+				player.Character.Humanoid:EquipTool(tool)
+				return true
+			end
+		end
+	end
+	return false
 end
 
 local function equipPetByName(itemName) --for pets
-        local player = game.Players.LocalPlayer
-        local backpack = player:WaitForChild("Backpack")
+	local player = game.Players.LocalPlayer
+	local backpack = player:WaitForChild("Backpack")
 
-        for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                        local name = tool.Name
+	for _, tool in ipairs(backpack:GetChildren()) do
+		if tool:IsA("Tool") then
+			local name = tool.Name
             if itemName == name then
                 print("Selling: "..itemName)
                 player.Character.Humanoid:EquipTool(tool)
-                            return true
+			    return true
             end
-                end
-        end
-        return false
+		end
+	end
+	return false
 end
 
 --=======HANDLE LOCATIONS FOR  AUTO PLACE EGG
@@ -538,8 +538,10 @@ end
 
 
 local positionForPlaceEggs = "Left - spread out"
+
 local function getPositionForPlaceEggs()
     local eggOffsets
+
     if positionForPlaceEggs == "Left - spread out" then
         eggOffsets = {
             Vector3.new(-36, 0, -18),
@@ -562,20 +564,24 @@ local function getPositionForPlaceEggs()
             Vector3.new(-18, 0, -63),
             Vector3.new(-9, 0, -63),
         }
+
     elseif positionForPlaceEggs == "Right - spread out" then
         eggOffsets = {
             Vector3.new(10, 0, -18),
             Vector3.new(19, 0, -18),
             Vector3.new(28, 0, -18),
             Vector3.new(37, 0, -18),
+
             Vector3.new(10, 0, -33),
             Vector3.new(19, 0, -33),
             Vector3.new(28, 0, -33),
             Vector3.new(37, 0, -33),
+
             Vector3.new(10, 0, -48),
             Vector3.new(19, 0, -48),
             Vector3.new(28, 0, -48),
             Vector3.new(37, 0, -48),
+
             Vector3.new(10, 0, -63),
             Vector3.new(19, 0, -63),
             Vector3.new(28, 0, -63),
@@ -627,6 +633,37 @@ local function getPositionForPlaceEggs()
             Vector3.new(22, 0, -21),
             Vector3.new(25, 0, -21),
         }
+
+    elseif positionForPlaceEggs == "Random - stacked" then
+        local pos = {}
+        local minX, maxX = -40, 40
+        local minZ, maxZ = -70, -10
+        local minDist = 8
+        local attempts = 0
+
+        while #pos < 30 and attempts < 1000 do
+            local newPos = Vector3.new(
+                math.random(minX, maxX),
+                0,
+                math.random(minZ, maxZ)
+            )
+
+            local farEnough = true
+            for _, p in ipairs(pos) do
+                if (p - newPos).Magnitude < minDist then
+                    farEnough = false
+                    break
+                end
+            end
+
+            if farEnough then
+                table.insert(pos, newPos)
+            end
+
+            attempts = attempts + 1
+        end
+
+        eggOffsets = pos
     end
 
     return eggOffsets
@@ -646,68 +683,68 @@ local function getFarmEggLocations()
 end
 
 local function testLocation(offset)
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        if not hrp then
-                warn("HumanoidRootPart not found")
-                return
-        end
+	local player = game.Players.LocalPlayer
+	local character = player.Character or player.CharacterAdded:Wait()
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if not hrp then
+		warn("HumanoidRootPart not found")
+		return
+	end
 
-        local spawnCFrame = getFarmSpawnCFrame()
-        if not spawnCFrame then
-                warn("Spawn point not found")
-                return
-        end
+	local spawnCFrame = getFarmSpawnCFrame()
+	if not spawnCFrame then
+		warn("Spawn point not found")
+		return
+	end
 
-        if not offset or typeof(offset) ~= "Vector3" then
-                warn("Invalid offset provided")
-                return
-        end
+	if not offset or typeof(offset) ~= "Vector3" then
+		warn("Invalid offset provided")
+		return
+	end
 
-        local targetPos = spawnCFrame:PointToWorldSpace(offset)
-        hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+	local targetPos = spawnCFrame:PointToWorldSpace(offset)
+	hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
 end
 
 --preload custom loadouts
 getgenv().preloadedCustomLoadouts = {}
 local function preloadCustomLoadouts()
-        local saveFolder = "BeastHub"
+	local saveFolder = "BeastHub"
 
-        if not isfolder(saveFolder) then
-                makefolder(saveFolder)
-        end
+	if not isfolder(saveFolder) then
+		makefolder(saveFolder)
+	end
 
-        local data = {}
-        local files = {}
+	local data = {}
+	local files = {}
 
-        local ok, rawFiles = pcall(function()
-                return listfiles(saveFolder)
-        end)
+	local ok, rawFiles = pcall(function()
+		return listfiles(saveFolder)
+	end)
 
-        if ok and type(rawFiles) == "table" then
-                for _, filePath in ipairs(rawFiles) do
-                        if type(filePath) == "string" and string.match(filePath, "%.txt$") then
-                                local name = filePath:match("([^/\\]+)%.txt$")
-                                if name and name ~= "" then
-                                        files[#files+1] = name
+	if ok and type(rawFiles) == "table" then
+		for _, filePath in ipairs(rawFiles) do
+			if type(filePath) == "string" and string.match(filePath, "%.txt$") then
+				local name = filePath:match("([^/\\]+)%.txt$")
+				if name and name ~= "" then
+					files[#files+1] = name
 
-                                        local fOk, content = pcall(function()
-                                                return readfile(filePath)
-                                        end)
+					local fOk, content = pcall(function()
+						return readfile(filePath)
+					end)
 
-                                        data[name] = fOk and content or ""
-                                end
-                        end
-                end
-        end
+					data[name] = fOk and content or ""
+				end
+			end
+		end
+	end
 
-        table.sort(files, function(a, b)
-                return string.lower(a) < string.lower(b)
-        end)
+	table.sort(files, function(a, b)
+		return string.lower(a) < string.lower(b)
+	end)
 
-        getgenv().preloadedCustomLoadouts = data
-        getgenv().preloadedCustomLoadoutNames = files -- optional helper
+	getgenv().preloadedCustomLoadouts = data
+	getgenv().preloadedCustomLoadoutNames = files -- optional helper
 end
 preloadCustomLoadouts()
 getgenv().preloadCustomLoadouts = preloadCustomLoadouts
@@ -715,6 +752,7 @@ getgenv().preloadCustomLoadouts = preloadCustomLoadouts
 --signal for custom loadout changes
 getgenv().LoadoutsChangedEvent = getgenv().LoadoutsChangedEvent or Instance.new("BindableEvent")
 
+--local login_url = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/u2.lua"))()
 
 --=====================
 --get FULL pet list via registry
@@ -751,20 +789,20 @@ table.sort(petListNamesOnlyAndSorted)
 
 --v2
 local function getAllSeedsTableV2()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local PlantDataModule = ReplicatedStorage
-                :WaitForChild("Modules")
-                :WaitForChild("GardenGuideModules")
-                :WaitForChild("DataModules")
-                :WaitForChild("PlantData")
-        local PlantData = require(PlantDataModule)
-        if typeof(PlantData) ~= "table" then
-                return nil
-        end
-        if typeof(PlantData.Data) ~= "table" then
-                return nil
-        end
-        return PlantData.Data
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local PlantDataModule = ReplicatedStorage
+		:WaitForChild("Modules")
+		:WaitForChild("GardenGuideModules")
+		:WaitForChild("DataModules")
+		:WaitForChild("PlantData")
+	local PlantData = require(PlantDataModule)
+	if typeof(PlantData) ~= "table" then
+		return nil
+	end
+	if typeof(PlantData.Data) ~= "table" then
+		return nil
+	end
+	return PlantData.Data
 end
 local allSeedsData = getAllSeedsTableV2()
 
@@ -782,60 +820,58 @@ end
 
 
 local function equipFruitById(fruitId)
-        local player = game.Players.LocalPlayer
-        local backpack = player:WaitForChild("Backpack")
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
+	local player = game.Players.LocalPlayer
+	local backpack = player:WaitForChild("Backpack")
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
 
-        -- Unequip all tools first
-        humanoid:UnequipTools()
+	-- Unequip all tools first
+	humanoid:UnequipTools()
 
-        for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") and tool:GetAttribute("c") == fruitId then
-                        humanoid:EquipTool(tool)
-                        return true -- successfully equipped
-                end
-        end
+	for _, tool in ipairs(backpack:GetChildren()) do
+		if tool:IsA("Tool") and tool:GetAttribute("c") == fruitId then
+			humanoid:EquipTool(tool)
+			return true -- successfully equipped
+		end
+	end
 
-        return false -- not found
+	return false -- not found
 end
 
 --LIVE
-local mainModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/main2.lua"))()
+local mainModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/main2.lua"))()
 --DEV MODE 
 -- local mainModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE PetsModule
 -- local PetsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubpets2.lua"))()
 --DEV MODE2 
-local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/xXNuJFD5"))()
+local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/MSMzxAYj"))()
 
 --LIVE AutomationModule
-local AutomationModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubautomation2.lua"))()
+local AutomationModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubautomation2.lua"))()
 --DEV MODE 2
 -- local AutomationModule = loadstring(game:HttpGet("https://pastebin.com/raw/AeFQvyJH"))()
 
 --LIVE LoadoutsModule
-local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/loadouts.lua"))()
+local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/loadouts.lua"))()
 --DEV MODE 2
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
---LIVE EventModule
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubevent.lua"))()
---DEV MODE2 
--- local EventModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
-
 --LIVE TraderModule
-local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/trader.lua"))()
+local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/trader.lua"))()
 --DEV MODE2 
 -- local TraderModule = loadstring(game:HttpGet("https://pastebin.com/raw/evwpQQfM"))()
 
-
 --LIVE PlantsModule
-local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/plants.lua"))()
+local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/plants.lua"))()
 --DEV MODE2 
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
+--Live CraftModule
+local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
+
+local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event.lua"))()
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
@@ -851,9 +887,12 @@ LoadoutsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon,
 
 PlantsModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, allSeedsData, allSeedsOnly, equipFruitById)
 
-EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, allSeedsData, allSeedsOnly, equipFruitById)
+CraftModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
+
+EventModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon)
 
 TraderModule.init(Rayfield, beastHubNotify, Window, myFunctions, beastHubIcon, equipItemByName, equipItemByNameV2, getMyFarm, getFarmSpawnCFrame, getAllPetNames, sendDiscordWebhook, sendPetDataWebhook)
+
 
 local Misc = Window:CreateTab("Misc", "code")
 local workspace = game:GetService("Workspace")
@@ -1239,35 +1278,35 @@ Shops:CreateSection("Traveling Merchant")
 local function getTravelingMerchantsData()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local dataModule = ReplicatedStorage:WaitForChild("Data"):WaitForChild("TravelingMerchant"):WaitForChild("TravelingMerchantData")
-        local success, data = pcall(require, dataModule)
-        if not success or type(data) ~= "table" then
-                return {}
-        end
-        return data
+	local success, data = pcall(require, dataModule)
+	if not success or type(data) ~= "table" then
+		return {}
+	end
+	return data
 end
 local travelingMerchantData = getTravelingMerchantsData()
 
 local function getTravelingMerchantKeys()
-        -- local merchantData = getTravelingMerchantsData() --travelingMerchantData
-        local merchants = {}
-        for merchantName, _ in pairs(travelingMerchantData) do
-                table.insert(merchants, merchantName)
-        end
-        table.sort(merchants)
-        return merchants
+	-- local merchantData = getTravelingMerchantsData() --travelingMerchantData
+	local merchants = {}
+	for merchantName, _ in pairs(travelingMerchantData) do
+		table.insert(merchants, merchantName)
+	end
+	table.sort(merchants)
+	return merchants
 end
 
 local function getMerchantShopItems(merchantName)
-        local merchant = travelingMerchantData[merchantName]
-        if not merchant or type(merchant.ShopData) ~= "table" then
-                return {}
-        end
-        local items = {}
-        for itemName, itemData in pairs(merchant.ShopData) do
-                table.insert(items, itemName.." | "..itemData.ItemType)
-        end
-        table.sort(items)
-        return items
+	local merchant = travelingMerchantData[merchantName]
+	if not merchant or type(merchant.ShopData) ~= "table" then
+		return {}
+	end
+	local items = {}
+	for itemName, itemData in pairs(merchant.ShopData) do
+		table.insert(items, itemName.." | "..itemData.ItemType)
+	end
+	table.sort(items)
+	return items
 end
 
 local travelingMerchants = getTravelingMerchantKeys()
@@ -1277,86 +1316,86 @@ local merchantDropdowns = {}
 
 --dropdown creation loop
 for _, merchantName in ipairs(travelingMerchants) do
-        merchantSelections[merchantName] = {}
-        local dropdown = Shops:CreateDropdown({
-                Name = merchantName,
-                Options = getMerchantShopItems(merchantName),
-                CurrentOption = {},
-                MultipleOptions = true,
-                Flag = "dropdown_" .. merchantName:gsub(" ", ""),
-                Callback = function(options)
-                        merchantSelections[merchantName] = options
-                end,
-        })
-        merchantDropdowns[merchantName] = dropdown
+	merchantSelections[merchantName] = {}
+	local dropdown = Shops:CreateDropdown({
+		Name = merchantName,
+		Options = getMerchantShopItems(merchantName),
+		CurrentOption = {},
+		MultipleOptions = true,
+		Flag = "dropdown_" .. merchantName:gsub(" ", ""),
+		Callback = function(options)
+			merchantSelections[merchantName] = options
+		end,
+	})
+	merchantDropdowns[merchantName] = dropdown
 end
 
 local itemTypes_travelingMerchantShopItems = {
-        "Gear",
-        "Seed",
-        "Crate",
-        "Egg",
-        "Pet",
-        "Cosmetic",
-        "Seed Pack",
-        "Fence"
+	"Gear",
+	"Seed",
+	"Crate",
+	"Egg",
+	"Pet",
+	"Cosmetic",
+	"Seed Pack",
+	"Fence"
 }
 
 for _, itemType in ipairs(itemTypes_travelingMerchantShopItems) do
-        Shops:CreateButton({
-                Name = "Select All " .. itemType,
-                Callback = function()
-                        for merchantName, dropdown in pairs(merchantDropdowns) do
-                                local options = dropdown.Options or {}
-                                local current = merchantSelections[merchantName] or {}
-                                local selectedMap = {}
+	Shops:CreateButton({
+		Name = "Select All " .. itemType,
+		Callback = function()
+			for merchantName, dropdown in pairs(merchantDropdowns) do
+				local options = dropdown.Options or {}
+				local current = merchantSelections[merchantName] or {}
+				local selectedMap = {}
 
-                                for _, v in ipairs(current) do
-                                        selectedMap[v] = true
-                                end
+				for _, v in ipairs(current) do
+					selectedMap[v] = true
+				end
 
-                                for _, option in ipairs(options) do
-                                        if string.match(option, "%|%s*" .. itemType .. "$") then
-                                                if not selectedMap[option] then
-                                                        table.insert(current, option)
-                                                        selectedMap[option] = true
-                                                end
-                                        end
-                                end
+				for _, option in ipairs(options) do
+					if string.match(option, "%|%s*" .. itemType .. "$") then
+						if not selectedMap[option] then
+							table.insert(current, option)
+							selectedMap[option] = true
+						end
+					end
+				end
 
-                                dropdown:Set(current)
-                                merchantSelections[merchantName] = current
-                        end
-                end,
-        })
+				dropdown:Set(current)
+				merchantSelections[merchantName] = current
+			end
+		end,
+	})
 end
 
 
 Shops:CreateButton({
-        Name = "Clear All Selections",
-        Callback = function()
-                for merchantName, dropdown in pairs(merchantDropdowns) do
-                        dropdown:Set({})
-                        merchantSelections[merchantName] = {}
-                end
-        end,
+	Name = "Clear All Selections",
+	Callback = function()
+		for merchantName, dropdown in pairs(merchantDropdowns) do
+			dropdown:Set({})
+			merchantSelections[merchantName] = {}
+		end
+	end,
 })
 
 
 local autoBuyTravelingMerchantEnabled = false
 local autoBuyTravelingMerchantThread = nil
 Shops:CreateToggle({
-        Name = "Auto Buy Traveling Merchant",
-        CurrentValue = false,
-        Flag = "autoBuyTravelingMerchant",
-        Callback = function(Value)
-                autoBuyTravelingMerchantEnabled = Value
+	Name = "Auto Buy Traveling Merchant",
+	CurrentValue = false,
+	Flag = "autoBuyTravelingMerchant",
+	Callback = function(Value)
+		autoBuyTravelingMerchantEnabled = Value
 
-                if autoBuyTravelingMerchantEnabled then
-                        if autoBuyTravelingMerchantThread then
-                                return
-                        end
-                        -- beastHubNotify("Auto Buy Traveling Merchant running", "", 3)
+		if autoBuyTravelingMerchantEnabled then
+			if autoBuyTravelingMerchantThread then
+				return
+			end
+			-- beastHubNotify("Auto Buy Traveling Merchant running", "", 3)
             local function getTravelingMerchantStocksData()
                 local dataService = require(game:GetService("ReplicatedStorage").Modules.DataService)
                 local logs = dataService:GetData()
@@ -1364,8 +1403,8 @@ Shops:CreateToggle({
             end
             local travelingMerchantStocksData = getTravelingMerchantStocksData()
 
-                        autoBuyTravelingMerchantThread = task.spawn(function()
-                                travelingMerchantData = getTravelingMerchantsData()
+			autoBuyTravelingMerchantThread = task.spawn(function()
+				travelingMerchantData = getTravelingMerchantsData()
                 while autoBuyTravelingMerchantEnabled do
                     local stockData = getTravelingMerchantStocksData()
                     local activeMerchant = stockData.MerchantType
@@ -1397,15 +1436,15 @@ Shops:CreateToggle({
                     task.wait(2)
                 end
 
-                                autoBuyTravelingMerchantThread = nil
-                        end)
-                else
-                        autoBuyTravelingMerchantEnabled = false
-                        if autoBuyTravelingMerchantThread then
-                                autoBuyTravelingMerchantThread = nil
-                        end
-                end
-        end,
+				autoBuyTravelingMerchantThread = nil
+			end)
+		else
+			autoBuyTravelingMerchantEnabled = false
+			if autoBuyTravelingMerchantThread then
+				autoBuyTravelingMerchantThread = nil
+			end
+		end
+	end,
 })
 
 
@@ -1534,7 +1573,7 @@ local Input_delayToHatch = PetEggs:CreateInput({
 
 local position_placeEggs = PetEggs:CreateDropdown({
     Name = "Position",
-    Options = {"Left - spread out","Right - spread out", "Left - stacked", "Right - stacked"},
+    Options = {"Left - spread out","Right - spread out", "Left - stacked", "Right - stacked", "Random - stacked"},
     CurrentOption = {"Left - spread out"},
     MultipleOptions = false,
     Flag = "positionPlaceEggs", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
@@ -1731,7 +1770,7 @@ local function autoSellPets(targetPets, weightTargetBelow, onComplete)
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
     local SellPet_RE = game:GetService("ReplicatedStorage").GameEvents.SellPet_RE
-        player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
     for _, item in ipairs(backpack:GetChildren()) do
         local b = item:GetAttribute("b") -- pet type
@@ -1956,7 +1995,7 @@ local function autoSellPets3(targetPets, weightTargetBelow, onComplete)
     mainModule.isSafeToPickPlace = false
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-        player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
     beastHubNotify("Sell delay: "..(tostring(Input_delayToSell.CurrentValue) or ""),"",3)
     task.wait(tonumber(Input_delayToSell.CurrentValue) or 2)
 
@@ -2017,7 +2056,7 @@ local function autoSellPets2(targetPets, weightTargetBelow, onComplete)
     mainModule.isSafeToPickPlace = false
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-        player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
     beastHubNotify("Sell delay: "..tostring(Input_delayToSell.CurrentValue) or "","",3)
     task.wait(tonumber(Input_delayToSell.CurrentValue) or 2)
     
@@ -2043,11 +2082,11 @@ local function autoSellPets2(targetPets, weightTargetBelow, onComplete)
 
             if isTarget and weight and weight < weightTargetBelow then
                 --fire the event here
-                                local success = pcall(function()
+				local success = pcall(function()
                     local args = {
                         [1] = item;
                     }
-                                        -- game:GetService("ReplicatedStorage"):WaitForChild("GameEvents", 5):WaitForChild("SellPet_RE", 5):FireServer(unpack(args))
+					-- game:GetService("ReplicatedStorage"):WaitForChild("GameEvents", 5):WaitForChild("SellPet_RE", 5):FireServer(unpack(args))
                     game:GetService("ReplicatedStorage").GameEvents.SellPetShopSelected:FireServer(unpack(args))
                 end)
                 task.wait(0.05)
@@ -2065,157 +2104,157 @@ end
 -- local function isGoodToSellAll()
 --     beastHubNotify("Validating SELL ALL safety..", "Please wait", 5)
 --     local player = game.Players.LocalPlayer
---      player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+-- 	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
---      local rs = game:GetService("ReplicatedStorage")
---      local favUnfavEvent = rs.GameEvents.Favorite_Item
---      local backpack = player:WaitForChild("Backpack")
---      local listToCheckInBag = {}
+-- 	local rs = game:GetService("ReplicatedStorage")
+-- 	local favUnfavEvent = rs.GameEvents.Favorite_Item
+-- 	local backpack = player:WaitForChild("Backpack")
+-- 	local listToCheckInBag = {}
 --     local lastNotifyTime = tick()
 
---      local function getPlayerData()
---              local ok, dataService = pcall(function()
---                      return require(game:GetService("ReplicatedStorage").Modules.DataService)
---              end)
---              if not ok or not dataService then
---                      return nil
---              end
---              local ok2, logs = pcall(function()
---                      return dataService:GetData()
---              end)
---              if not ok2 then
---                      return nil
---              end
---              return logs
---      end
---      local playerData = getPlayerData()
---      if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
---              return false
---      end
---      local petInventory = playerData.PetsData.PetInventory.Data
---      for petId, data in pairs(petInventory) do
---              if data and data.PetType and data.PetData then
---                      if not data.PetData.IsFavorite then
---                              listToCheckInBag[petId] = true
---                      end
---              end
---      end
---      for index, item in ipairs(backpack:GetChildren()) do
---              local petUuid = item:GetAttribute("PET_UUID")
+-- 	local function getPlayerData()
+-- 		local ok, dataService = pcall(function()
+-- 			return require(game:GetService("ReplicatedStorage").Modules.DataService)
+-- 		end)
+-- 		if not ok or not dataService then
+-- 			return nil
+-- 		end
+-- 		local ok2, logs = pcall(function()
+-- 			return dataService:GetData()
+-- 		end)
+-- 		if not ok2 then
+-- 			return nil
+-- 		end
+-- 		return logs
+-- 	end
+-- 	local playerData = getPlayerData()
+-- 	if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
+-- 		return false
+-- 	end
+-- 	local petInventory = playerData.PetsData.PetInventory.Data
+-- 	for petId, data in pairs(petInventory) do
+-- 		if data and data.PetType and data.PetData then
+-- 			if not data.PetData.IsFavorite then
+-- 				listToCheckInBag[petId] = true
+-- 			end
+-- 		end
+-- 	end
+-- 	for index, item in ipairs(backpack:GetChildren()) do
+-- 		local petUuid = item:GetAttribute("PET_UUID")
 --         local d = item:GetAttribute("d") --favorited or not
---              if petUuid and listToCheckInBag[petUuid] then
---                      local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
---                      local petNameInBag = item.Name:match("^(.-)%s*%[")
+-- 		if petUuid and listToCheckInBag[petUuid] then
+-- 			local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
+-- 			local petNameInBag = item.Name:match("^(.-)%s*%[")
 --             if petNameInBag and string.find(petNameInBag, "Peppermint", 1, true) then
 --                 petNameInBag = petNameInBag:gsub("Peppermint", ""):gsub("^%s+", ""):gsub("%s+$", "")
 --             end
 --             if petNameInBag and string.find(petNameInBag, "SpiritSparkle", 1, true) then
 --                 petNameInBag = petNameInBag:gsub("SpiritSparkle", ""):gsub("^%s+", ""):gsub("%s+$", "")
 --             end
---                      if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
+-- 			if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
 --                 -- print("inside if, fav event")
---                              beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
---                              favUnfavEvent:FireServer(item)
+-- 				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+-- 				favUnfavEvent:FireServer(item)
 --                 task.wait(2)
---                      elseif d == false and weight > sellBelow then
+-- 			elseif d == false and weight > sellBelow then
 --                 -- print("inside else, fav event")
---                              beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
---                              favUnfavEvent:FireServer(item)
+-- 				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+-- 				favUnfavEvent:FireServer(item)
 --                 task.wait(2)
 --             else
 --                 -- print("IN ELSE")
---                      end
---              end
+-- 			end
+-- 		end
 --         -- notify every 2 seconds
 --         if tick() - lastNotifyTime >= 2 then
 --             beastHubNotify("Processing items... ("..index.."/"..#backpack:GetChildren()..")", "", 2)
 --             lastNotifyTime = tick()
 --         end
---              task.wait()
---      end
---      return true
+-- 		task.wait()
+-- 	end
+-- 	return true
 -- end
 
 local function isGoodToSellAllv2()
     beastHubNotify("Validating SELL ALL safety..", "Please wait", 5)
     local player = game.Players.LocalPlayer
-        player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
-        local rs = game:GetService("ReplicatedStorage")
-        local favUnfavEvent = rs.GameEvents.Favorite_Item
-        local backpack = player:WaitForChild("Backpack")
-        local listToCheckInBag = {}
+	local rs = game:GetService("ReplicatedStorage")
+	local favUnfavEvent = rs.GameEvents.Favorite_Item
+	local backpack = player:WaitForChild("Backpack")
+	local listToCheckInBag = {}
     local baseKGlist = {}
     local lastNotifyTime = tick()
     sellBelow = tonumber(input_sellBelow.CurrentValue)
 
-        local function getPlayerData()
-                local ok, dataService = pcall(function()
-                        return require(game:GetService("ReplicatedStorage").Modules.DataService)
-                end)
-                if not ok or not dataService then
-                        return nil
-                end
-                local ok2, logs = pcall(function()
-                        return dataService:GetData()
-                end)
-                if not ok2 then
-                        return nil
-                end
-                return logs
-        end
-        local playerData = getPlayerData()
-        if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
-                return false
-        end
-        local petInventory = playerData.PetsData.PetInventory.Data
-        for petId, data in pairs(petInventory) do
-                if data and data.PetType and data.PetData then
-                        if not data.PetData.IsFavorite then
+	local function getPlayerData()
+		local ok, dataService = pcall(function()
+			return require(game:GetService("ReplicatedStorage").Modules.DataService)
+		end)
+		if not ok or not dataService then
+			return nil
+		end
+		local ok2, logs = pcall(function()
+			return dataService:GetData()
+		end)
+		if not ok2 then
+			return nil
+		end
+		return logs
+	end
+	local playerData = getPlayerData()
+	if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
+		return false
+	end
+	local petInventory = playerData.PetsData.PetInventory.Data
+	for petId, data in pairs(petInventory) do
+		if data and data.PetType and data.PetData then
+			if not data.PetData.IsFavorite then
                 local baseKG = data.PetData.BaseWeight
-                                listToCheckInBag[petId] = true
+				listToCheckInBag[petId] = true
                 baseKGlist[petId] = baseKG
-                        end
-                end
-        end
-        for index, item in ipairs(backpack:GetChildren()) do
-                local petUuid = item:GetAttribute("PET_UUID")
+			end
+		end
+	end
+	for index, item in ipairs(backpack:GetChildren()) do
+		local petUuid = item:GetAttribute("PET_UUID")
         local d = item:GetAttribute("d") --favorited or not
-                if petUuid and listToCheckInBag[petUuid] then
-                        local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
+		if petUuid and listToCheckInBag[petUuid] then
+			local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
             if sellAllBelowKGmode == "Base KG" then
                 weight = baseKGlist[petUuid] * 1.1
             end
 
-                        local petNameInBag = item.Name:match("^(.-)%s*%[")
+			local petNameInBag = item.Name:match("^(.-)%s*%[")
             if petNameInBag and string.find(petNameInBag, "Peppermint", 1, true) then
                 petNameInBag = petNameInBag:gsub("Peppermint", ""):gsub("^%s+", ""):gsub("%s+$", "")
             end
             if petNameInBag and string.find(petNameInBag, "SpiritSparkle", 1, true) then
                 petNameInBag = petNameInBag:gsub("SpiritSparkle", ""):gsub("^%s+", ""):gsub("%s+$", "")
             end
-                        if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
+			if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
                 -- print("inside if, fav event")
-                                beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
-                                favUnfavEvent:FireServer(item)
+				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+				favUnfavEvent:FireServer(item)
                 task.wait(2)
-                        elseif d == false and weight > sellBelow then
+			elseif d == false and weight > sellBelow then
                 -- print("inside else, fav event")
-                                beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
-                                favUnfavEvent:FireServer(item)
+				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+				favUnfavEvent:FireServer(item)
                 task.wait(2)
             else
                 -- print("IN ELSE")
-                        end
-                end
+			end
+		end
         -- notify every 2 seconds
         if tick() - lastNotifyTime >= 2 then
             beastHubNotify("Processing items... ("..index.."/"..#backpack:GetChildren()..")", "", 2)
             lastNotifyTime = tick()
         end
-                task.wait()
-        end
-        return true
+		task.wait()
+	end
+	return true
 end
 
 -- PetEggs:CreateLabel("Turn on SELL ALL toggle below to activate 50% seal cap. Reason: Seal bug", "alert-triangle") 
@@ -2249,7 +2288,7 @@ PetEggs:CreateButton({
             mainModule.isSafeToPickPlace = false
             task.wait(2)
             myFunctions.switchToLoadout(sealsLoady, getFarmSpawnCFrame, beastHubNotify)
-                        beastHubNotify("Waiting for Seals to load", "Auto Sell", "5")
+			beastHubNotify("Waiting for Seals to load", "Auto Sell", "5")
             task.wait(6)
         end
 
@@ -2316,7 +2355,7 @@ PetEggs:CreateButton({
                             sealFound = true
                         end
                         if (petName ~= "Seal" and petName ~= "Ruby Squid") or (petName ~= "Ruby Squid" and squidFound) then
-                            allGood = false
+                            allGood = true
                             break
                         end
                     end
@@ -2697,22 +2736,22 @@ local Toggle_bhubESP = PetEggs:CreateToggle({
 
                                 if isHuge then
                                     if rawKG < 5 then
-                                        label.Text = '<font color="rgb(255,0,0)"><b>ARAY KO!</b></font>\n<font color="rgb(0,255,0)">' .. petName .. '</font> = ' .. petKG .. 'kg'
+                                        label.Text = '<font color="rgb(255,0,0)"><b>ARAY KO!</b></font>\n<font color="rgb(204,204,0)"><b>' .. petName .. '</b></font><b> = ' .. petKG .. 'kg</b>'
                                     elseif rawKG < 8 then
                                         local brontoKG = string.format("%.2f", rawKG * 1.3)
-                                        label.Text = '<font color="rgb(255,0,0)"><b>PALDO! ('..brontoKG..'kg)</b></font>\n<font color="rgb(0,255,0)">' .. petName .. '</font> = ' .. petKG .. 'kg'
+                                        label.Text = '<font color="rgb(255,0,0)"><b>PALDO! ('..brontoKG..'kg)</b></font>\n<font color="rgb(204,204,0)"><b>' .. petName .. '</b></font><b> = ' .. petKG .. 'kg</b>'
                                     else
                                         local brontoKG = string.format("%.2f", rawKG * 1.3)
-                                        label.Text = '<font color="rgb(255,0,0)"><b>PALDOOOOO!!! ('..brontoKG..'kg)</b></font>\n<font color="rgb(0,255,0)">' .. petName .. '</font> = ' .. petKG .. 'kg'
+                                        label.Text = '<font color="rgb(255,0,0)"><b>PALDOOOOO!!! ('..brontoKG..'kg)</b></font>\n<font color="rgb(204,204,0)"><b>' .. petName .. '</b></font><b> = ' .. petKG .. 'kg</b>'
                                     end
                                 else
-                                    label.Text = '<font color="rgb(0,255,0)">' .. petName .. '</font> = ' .. petKG .. 'kg'
+                                    label.Text = '<font color="rgb(204,204,0)"><b>' .. petName .. '</b></font><b> = ' .. petKG .. 'kg</b>'
                                 end
 
-                                label.TextColor3 = Color3.fromRGB(0, 255, 0)
+                                label.TextColor3 = Color3.fromRGB(204, 204, 0)
                                 label.TextStrokeTransparency = 0.5
                                 label.TextScaled = false
-                                label.TextSize = 20
+                                label.TextSize = 18
                                 label.Font = Enum.Font.SourceSans
                                 label.Parent = billboard
                             end
@@ -3153,8 +3192,8 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                     -- Get values using string match 
                                                     -- local petName = string.match(text, "0%)'>(.-)</font>")
                                                     -- local stringKG = string.match(text, ".*=%s*<font.-'>(.-)</font>")
-                                                    local petName = text:match('rgb%(%s*0,%s*255,%s*0%s*%)">(.-)</font>%s*=')
-                                                    local stringKG = text:match("= (%d+%.?%d*)")
+                                                    local petName = text:match('rgb%(%s*204,%s*204,%s*0%s*%)"><b>(.-)</b></font>')
+                                                    local stringKG = text:match("=%s*(%d+%.?%d*)kg")
                                                     
                                                     -- print("petName")
                                                     -- print(petName)
@@ -3675,153 +3714,150 @@ local Toggle_hideOtherFarm = Misc:CreateToggle({
 local autoHidePlantsEnabled = false
 local autoHidePlantsThread = nil
 Misc:CreateToggle({
-        Name = "Auto Hide my Plants",
-        CurrentValue = false,
-        Flag = "autoHidePlants",
-        Callback = function(Value)
-                autoHidePlantsEnabled = Value
+	Name = "Auto Hide my Plants",
+	CurrentValue = false,
+	Flag = "autoHidePlants",
+	Callback = function(Value)
+		autoHidePlantsEnabled = Value
 
-                if autoHidePlantsEnabled then
-                        if autoHidePlantsThread then return end
-                        beastHubNotify("Auto Hide Plants running", "", 3)
+		if autoHidePlantsEnabled then
+			if autoHidePlantsThread then return end
+			beastHubNotify("Auto Hide Plants running", "", 3)
 
-                        autoHidePlantsThread = task.spawn(function()
-                                while autoHidePlantsEnabled do
-                                        local farm = getMyFarm()
-                                        if farm then
-                                                local important = farm:FindFirstChild("Important")
-                                                if important then
-                                                        local plantsPhysical = important:FindFirstChild("Plants_Physical")
-                                                        if plantsPhysical then
-                                                                for _, plant in ipairs(plantsPhysical:GetChildren()) do
-                                                                        if plant:IsA("Model") then
-                                                                                for _, obj in ipairs(plant:GetDescendants()) do
-                                                                                        if obj:IsA("BasePart") then
-                                                                                                obj.LocalTransparencyModifier = 1
-                                                                                                obj.CanCollide = false
-                                                                                                obj.CanTouch = false
-                                                                                                obj.CanQuery = false
-                                                                                        end
-                                                                                end
-                                                                        end
-                                                                end
-                                                        end
-                                                end
-                                        end
-                                        task.wait(1)
-                                end
-                                autoHidePlantsThread = nil
-                        end)
+			autoHidePlantsThread = task.spawn(function()
+				while autoHidePlantsEnabled do
+					local farm = getMyFarm()
+					if farm then
+						local important = farm:FindFirstChild("Important")
+						if important then
+							local plantsPhysical = important:FindFirstChild("Plants_Physical")
+							if plantsPhysical then
+								for _, plant in ipairs(plantsPhysical:GetChildren()) do
+									if plant:IsA("Model") then
+										for _, obj in ipairs(plant:GetDescendants()) do
+											if obj:IsA("BasePart") then
+												obj.LocalTransparencyModifier = 1
+												obj.CanCollide = false
+												obj.CanTouch = false
+												obj.CanQuery = false
+											end
+										end
+									end
+								end
+							end
+						end
+					end
+					task.wait(1)
+				end
+				autoHidePlantsThread = nil
+			end)
 
-                else
-                        autoHidePlantsEnabled = false
+		else
+			autoHidePlantsEnabled = false
 
-                        local farm = getMyFarm()
-                        if farm then
-                                local important = farm:FindFirstChild("Important")
-                                if important then
-                                        local plantsPhysical = important:FindFirstChild("Plants_Physical")
-                                        if plantsPhysical then
-                                                for _, plant in ipairs(plantsPhysical:GetChildren()) do
-                                                        if plant:IsA("Model") then
-                                                                for _, obj in ipairs(plant:GetDescendants()) do
-                                                                        if obj:IsA("BasePart") then
-                                                                                obj.LocalTransparencyModifier = 0
-                                                                                obj.CanCollide = true
-                                                                                obj.CanTouch = true
-                                                                                obj.CanQuery = true
-                                                                        end
-                                                                end
-                                                        end
-                                                end
-                                        end
-                                end
-                        end
+			local farm = getMyFarm()
+			if farm then
+				local important = farm:FindFirstChild("Important")
+				if important then
+					local plantsPhysical = important:FindFirstChild("Plants_Physical")
+					if plantsPhysical then
+						for _, plant in ipairs(plantsPhysical:GetChildren()) do
+							if plant:IsA("Model") then
+								for _, obj in ipairs(plant:GetDescendants()) do
+									if obj:IsA("BasePart") then
+										obj.LocalTransparencyModifier = 0
+										obj.CanCollide = true
+										obj.CanTouch = true
+										obj.CanQuery = true
+									end
+								end
+							end
+						end
+					end
+				end
+			end
 
-                        autoHidePlantsThread = nil
-                end
-        end,
+			autoHidePlantsThread = nil
+		end
+	end,
 })
-
-
-
 
 
 local autoLowGraphicsEnabled = false
 local autoLowGraphicsThreads = {} -- store multiple threads
 Misc:CreateToggle({
-        Name = "Reduce Lag (Web and Fireworks)",
-        CurrentValue = false,
-        Flag = "reduceLag",
-        Callback = function(Value)
-                autoLowGraphicsEnabled = Value
-                if autoLowGraphicsEnabled then
-                        if next(autoLowGraphicsThreads) then
-                                return
-                        end
+	Name = "Reduce Lag (Web and Fireworks)",
+	CurrentValue = false,
+	Flag = "reduceLag",
+	Callback = function(Value)
+		autoLowGraphicsEnabled = Value
+		if autoLowGraphicsEnabled then
+			if next(autoLowGraphicsThreads) then
+				return
+			end
 
-                        local function applyUltraAssetCull()
-                                for _, v in ipairs(workspace:GetDescendants()) do
-                                        if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
-                                                v:Destroy()
-                                        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                                                v.Enabled = false
-                                        elseif v:IsA("MeshPart") then
-                                                v.TextureID = ""
-                                                v.Material = Enum.Material.Plastic
-                                                v.CastShadow = false
-                                        elseif v:IsA("UnionOperation") then
-                                                v:Destroy()
-                                        elseif v:IsA("BasePart") then
-                                                if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
-                                                        v.LocalTransparencyModifier = 0.6
-                                                        v.CastShadow = false
-                                                end
-                                        end
-                                end
-                        end
+			local function applyUltraAssetCull()
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+						v:Destroy()
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+						v.Enabled = false
+					elseif v:IsA("MeshPart") then
+						v.TextureID = ""
+						v.Material = Enum.Material.Plastic
+						v.CastShadow = false
+					elseif v:IsA("UnionOperation") then
+						v:Destroy()
+					elseif v:IsA("BasePart") then
+						if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
+							v.LocalTransparencyModifier = 0.6
+							v.CastShadow = false
+						end
+					end
+				end
+			end
 
-                        beastHubNotify("Reduce lag active", "", 3)
+			beastHubNotify("Reduce lag active", "", 3)
 
-                        -- Thread 1: Clean SpiderWebFX
-                        autoLowGraphicsThreads.spiderWeb = task.spawn(function()
-                                while autoLowGraphicsEnabled do
-                                        local spiderFolder = workspace:FindFirstChild("SpiderWebFX")
-                                        if spiderFolder then
-                                                spiderFolder:Destroy()
-                                        end
-                                        task.wait(0.1)
-                                end
-                                autoLowGraphicsThreads.spiderWeb = nil
-                        end)
+			-- Thread 1: Clean SpiderWebFX
+			autoLowGraphicsThreads.spiderWeb = task.spawn(function()
+				while autoLowGraphicsEnabled do
+					local spiderFolder = workspace:FindFirstChild("SpiderWebFX")
+					if spiderFolder then
+						spiderFolder:Destroy()
+					end
+					task.wait(0.1)
+				end
+				autoLowGraphicsThreads.spiderWeb = nil
+			end)
 
-                        -- Thread 2: Clean JulyFirework
-                        autoLowGraphicsThreads.firework = task.spawn(function()
-                                while autoLowGraphicsEnabled do
-                                        local firework = workspace:FindFirstChild("JulyFirework")
-                                        if firework then
-                                                firework:Destroy()
-                                        end
-                                        task.wait(0.1)
-                                end
-                                autoLowGraphicsThreads.firework = nil
-                        end)
+			-- Thread 2: Clean JulyFirework
+			autoLowGraphicsThreads.firework = task.spawn(function()
+				while autoLowGraphicsEnabled do
+					local firework = workspace:FindFirstChild("JulyFirework")
+					if firework then
+						firework:Destroy()
+					end
+					task.wait(0.1)
+				end
+				autoLowGraphicsThreads.firework = nil
+			end)
 
-                        -- Optional: Thread 3 for ultra asset cull (uncomment if needed)
-                        -- autoLowGraphicsThreads.assets = task.spawn(function()
-                        --      while autoLowGraphicsEnabled do
-                        --              applyUltraAssetCull()
-                        --              task.wait(60)
-                        --      end
-                        --      autoLowGraphicsThreads.assets = nil
-                        -- end)
+			-- Optional: Thread 3 for ultra asset cull (uncomment if needed)
+			-- autoLowGraphicsThreads.assets = task.spawn(function()
+			-- 	while autoLowGraphicsEnabled do
+			-- 		applyUltraAssetCull()
+			-- 		task.wait(60)
+			-- 	end
+			-- 	autoLowGraphicsThreads.assets = nil
+			-- end)
 
-                else
-                        autoLowGraphicsEnabled = false
-                        -- clean up thread references
-                        autoLowGraphicsThreads = {}
-                end
-        end,
+		else
+			autoLowGraphicsEnabled = false
+			-- clean up thread references
+			autoLowGraphicsThreads = {}
+		end
+	end,
 })
 
 
@@ -3829,51 +3865,50 @@ local autoLowGraphicsEnabledUltra = false
 local autoLowGraphicsEnabledUltraThreads = {}
 
 Misc:CreateToggle({
-        Name = "More lag reduce",
-        CurrentValue = false,
-        Flag = "reduceLagMore",
-        Callback = function(Value)
-                autoLowGraphicsEnabledUltra = Value
-                if autoLowGraphicsEnabledUltra then
-                        if autoLowGraphicsEnabledUltraThreads.assets then
-                                return
-                        end
+	Name = "More lag reduce",
+	CurrentValue = false,
+	Flag = "reduceLagMore",
+	Callback = function(Value)
+		autoLowGraphicsEnabledUltra = Value
+		if autoLowGraphicsEnabledUltra then
+			if autoLowGraphicsEnabledUltraThreads.assets then
+				return
+			end
 
-                        local function applyUltraAssetCull()
-                                for _, v in ipairs(workspace:GetDescendants()) do
-                                        if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
-                                                v:Destroy()
-                                        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                                                v.Enabled = false
-                                        elseif v:IsA("MeshPart") then
-                                                v.TextureID = ""
-                                                v.Material = Enum.Material.Plastic
-                                                v.CastShadow = false
-                                        elseif v:IsA("UnionOperation") then
-                                                v:Destroy()
-                                        elseif v:IsA("BasePart") then
-                                                if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
-                                                        v.LocalTransparencyModifier = 0.6
-                                                        v.CastShadow = false
-                                                end
-                                        end
-                                end
-                        end
+			local function applyUltraAssetCull()
+				for _, v in ipairs(workspace:GetDescendants()) do
+					if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+						v:Destroy()
+					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+						v.Enabled = false
+					elseif v:IsA("MeshPart") then
+						v.TextureID = ""
+						v.Material = Enum.Material.Plastic
+						v.CastShadow = false
+					elseif v:IsA("UnionOperation") then
+						v:Destroy()
+					elseif v:IsA("BasePart") then
+						if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
+							v.LocalTransparencyModifier = 0.6
+							v.CastShadow = false
+						end
+					end
+				end
+			end
 
-                        autoLowGraphicsEnabledUltraThreads.assets = task.spawn(function()
-                                while autoLowGraphicsEnabledUltra do
-                                        applyUltraAssetCull()
-                                        task.wait(60)
-                                end
-                                autoLowGraphicsEnabledUltraThreads.assets = nil
-                        end)
-                else
-                        autoLowGraphicsEnabledUltra = false
-                        autoLowGraphicsEnabledUltraThreads = {}
-                end
-        end,
+			autoLowGraphicsEnabledUltraThreads.assets = task.spawn(function()
+				while autoLowGraphicsEnabledUltra do
+					applyUltraAssetCull()
+					task.wait(60)
+				end
+				autoLowGraphicsEnabledUltraThreads.assets = nil
+			end)
+		else
+			autoLowGraphicsEnabledUltra = false
+			autoLowGraphicsEnabledUltraThreads = {}
+		end
+	end,
 })
-
 
 
 Misc:CreateToggle({
@@ -3900,12 +3935,12 @@ Misc:CreateToggle({
 })
 
 Misc:CreateToggle({
-        Name = "Game Notifications (including trade notifs)",
-        CurrentValue = true,
-        Flag = "gameNotifs",
-        Callback = function(Value)
-                local player = game.Players.LocalPlayer
-                local playerGui = player:WaitForChild("PlayerGui")
+	Name = "Game Notifications (including trade notifs)",
+	CurrentValue = true,
+	Flag = "gameNotifs",
+	Callback = function(Value)
+		local player = game.Players.LocalPlayer
+		local playerGui = player:WaitForChild("PlayerGui")
 
         --new
         local start = tick()
@@ -3920,16 +3955,14 @@ Misc:CreateToggle({
         end
         task.wait(3)
 
-                for _, gui in ipairs(playerGui:GetChildren()) do
-                        if gui:IsA("ScreenGui") and gui.Name:match("Notification") then
-                                gui.Enabled = Value -- enable if toggle is ON, disable if OFF
-                        end
-                end
-        end,
+		for _, gui in ipairs(playerGui:GetChildren()) do
+			if gui:IsA("ScreenGui") and gui.Name:match("Notification") then
+				gui.Enabled = Value -- enable if toggle is ON, disable if OFF
+			end
+		end
+	end,
 })
 Misc:CreateDivider()
-
-
 
 --Misc>Webhook
 -- EXECUTOR-ONLY WEBHOOK FUNCTION
@@ -4075,15 +4108,113 @@ Misc:CreateToggle({
 })
 Misc:CreateDivider()
 
+-- Disconnection
+Misc:CreateSection("Server Connection")
+
+--webhook dc v2
+local disconnectEnabled = false
+local firedDisconnect = false
+local menuWatcherThread = nil
+Misc:CreateToggle({
+	Name = "Webhook on Disconnect",
+	CurrentValue = false,
+	Flag = "webhookDisconnection",
+	Callback = function(Value)
+		disconnectEnabled = Value
+		if disconnectEnabled then
+			if menuWatcherThread then
+				return
+			end
+			firedDisconnect = false
+			menuWatcherThread = task.spawn(function()
+				local GuiService = game:GetService("GuiService")
+				local CoreGui = game:GetService("CoreGui")
+				local lastMenuState = false
+				local dcText = ""
+				local flags = {
+					"Error Code",
+					"Reconnect"
+				}
+				local excludeFlags = {
+					"772"
+				}
+				local function scanScreenGui(gui)
+					for _, v in ipairs(gui:GetDescendants()) do
+						if v:IsA("TextLabel") or v:IsA("TextButton") then
+							if v.Visible then
+								local txt = v.Text
+								if type(txt) == "string" and txt ~= "" then
+									local matched = false
+									for _, flag in ipairs(flags) do
+										if string.find(txt, flag, 1, true) then
+											matched = true
+											break
+										end
+									end
+									if matched then
+										for _, exFlag in ipairs(excludeFlags) do
+											if string.find(txt, exFlag, 1, true) then
+												matched = false
+												break
+											end
+										end
+									end
+									if matched then
+										dcText = txt
+										return true
+									end
+								end
+							end
+						end
+					end
+					return false
+				end
+				while disconnectEnabled do
+					local menuOpen = GuiService.MenuIsOpen
+					if menuOpen and not lastMenuState and not firedDisconnect then
+						for _, child in ipairs(CoreGui:GetChildren()) do
+							if child:IsA("ScreenGui") then
+								if scanScreenGui(child) then
+									firedDisconnect = true
+									if webhookURL and autoRejoinOnDC then
+										for i = 1, 9999 do
+											sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
+											sendDiscordWebhook(webhookURL, "Auto rejoin triggered")
+											myFunctions.delayedRejoin(0.001)
+											task.wait(5)
+										end
+									elseif webhookURL then
+										sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
+									end
+									break
+								end
+							end
+						end
+					end
+					lastMenuState = menuOpen
+					task.wait(0.2)
+				end
+				menuWatcherThread = nil
+			end)
+		else
+			disconnectEnabled = false
+			firedDisconnect = false
+		end
+	end
+})
+
+
+
+
 
 
 Misc:CreateToggle({
-        Name = "Auto Rejoin on Disconnect",
-        CurrentValue = false,
-        Flag = "autoRejoinDisconnect",
-        Callback = function(Value)
+	Name = "Auto Rejoin on Disconnect",
+	CurrentValue = false,
+	Flag = "autoRejoinDisconnect",
+	Callback = function(Value)
         autoRejoinOnDC = Value
-        end,
+	end,
 })
 
 Misc:CreateDivider()
@@ -4117,6 +4248,9 @@ antiAFK()
 -- LOAD CONFIG / must be the last part of everything 
 local success, err = pcall(function()
     Rayfield:LoadConfiguration() -- Load config
+    local playerNameWebhook = game.Players.LocalPlayer.Name
+    local url = login_url
+    sendDiscordWebhook(url, "Logged in: "..playerNameWebhook)
 end)
 if success then
     task.delay(1, function()
@@ -4148,5 +4282,3 @@ getgenv().LoadoutsChangedEvent.Event:Connect(function()
     end
 end)
 getgenv().LoadoutsChangedEvent:Fire()
-
-
