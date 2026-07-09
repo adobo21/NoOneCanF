@@ -25,10 +25,10 @@ getgenv().BeastHubLoaded = true
 getgenv().ConfigLoaded = false
 
 --
-getgenv().BeastHubLink = "https://raw.githubusercontent.com/Adobo1/smoothHub1/refs/heads/main/BeastHub.lua"
+getgenv().BeastHubLink = "https://markdevs.vercel.app/dev_BeastHub.lua"
 if not getgenv().BeastHubFunctions then
     --LIVE
-    getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/myFunctions2.lua"))()
+    getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_myFunctions2.lua"))()
     --DEV MODE
     -- getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://pastebin.com/raw/SLUMGfXc"))()
 end
@@ -839,32 +839,32 @@ local function equipFruitById(fruitId)
 end
 
 --LIVE
-local mainModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/main2.lua"))()
+local mainModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_main2.lua"))()
 --DEV MODE 
 -- local mainModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE PetsModule
--- local PetsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubpets2.lua"))()
+ local PetsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_petsmodule.lua"))()
 --DEV MODE2 
-local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/MSMzxAYj"))()
+--local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/MSMzxAYj"))()
 
 --LIVE AutomationModule
-local AutomationModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubautomation2.lua"))()
+local AutomationModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_automation2.lua"))()
 --DEV MODE 2
 -- local AutomationModule = loadstring(game:HttpGet("https://pastebin.com/raw/AeFQvyJH"))()
 
 --LIVE LoadoutsModule
-local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/loadouts.lua"))()
+local LoadoutsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_loadouts.lua"))()
 --DEV MODE 2
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE TraderModule
-local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/trader.lua"))()
+local TraderModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_trader.lua"))()
 --DEV MODE2 
 -- local TraderModule = loadstring(game:HttpGet("https://pastebin.com/raw/evwpQQfM"))()
 
 --LIVE PlantsModule
-local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/plants.lua"))()
+local PlantsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_plants.lua"))()
 --DEV MODE2 
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
