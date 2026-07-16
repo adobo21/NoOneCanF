@@ -37,7 +37,7 @@ local myFunctions = getgenv().BeastHubFunctions
 --local luckGUI = myFunctions.createLuckGUI()
 
 -- ================== EGG STATUS GUI ==================
-local eggStatusGUI = false
+local eggStatusGUI = nil
 local eggStatusLabel = nil
 local originalEggCount = nil
 local trackedEggName = ""
@@ -2811,16 +2811,16 @@ local dropdown_bronto_loadout = PetEggs:CreateDropdown({
     end,
 })
 
-PetEggs:CreateToggle({
-  Name = "Show Egg Status",
-  CurrentValue = false,
-  Flag = "showEggStatusGUI",
-  Callback = function(Value)
-      if eggStatusGUI then
-          eggStatusGUI.Enabled = Value
-      end
-  end,
-})
+--PetEggs:CreateToggle({
+--  Name = "Show Egg Status",
+--  CurrentValue = false,
+--  Flag = "showEggStatusGUI",
+--  Callback = function(Value)
+--      if eggStatusGUI then
+--          eggStatusGUI.Enabled = Value
+ --     end
+ -- end,
+--})
 
 --bhub esp
 local bhubESPenabled = false
