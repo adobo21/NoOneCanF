@@ -25,16 +25,202 @@ getgenv().BeastHubLoaded = true
 getgenv().ConfigLoaded = false
 
 --
-getgenv().BeastHubLink = "https://raw.githubusercontent.com/Adobo1/smoothHub1/refs/heads/main/BeastHub.lua"
+getgenv().BeastHubLink = "https://markdevs.vercel.app/dev_BeastHub.lua"
 if not getgenv().BeastHubFunctions then
     --LIVE
-    getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/myFunctions2.lua"))()
+    getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_myFunctions2.lua"))()
     --DEV MODE
     -- getgenv().BeastHubFunctions = loadstring(game:HttpGet("https://pastebin.com/raw/SLUMGfXc"))()
 end
 local myFunctions = getgenv().BeastHubFunctions
 --
 --local luckGUI = myFunctions.createLuckGUI()
+
+-- ================== EGG STATUS GUI ==================
+local eggStatusGUI = false
+local eggStatusLabel = nil
+local originalEggCount = nil
+local trackedEggName = ""
+local originalCaptured = false
+
+local function getInventoryEggCount(eggName)
+    if not eggName or eggName == "" then return 0 end
+    local player = game.Players.LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
+    local character = player.Character
+    local totalCount = 0
+
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            if string.lower(tool.Name):find(string.lower(eggName)) then
+                local countStr = tool.Name:match("x(%d+)")
+                if countStr then
+                    totalCount = totalCount + tonumber(countStr)
+                else
+                    local amount = tool:GetAttribute("Amount")
+                    if amount then
+                        totalCount = totalCount + amount
+                    else
+                        totalCount = totalCount + 1
+                    end
+                end
+            end
+        end
+    end
+
+    if character then
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                if string.lower(tool.Name):find(string.lower(eggName)) then
+                    local countStr = tool.Name:match("x(%d+)")
+                    if countStr then
+                        totalCount = totalCount + tonumber(countStr)
+                    else
+                        local amount = tool:GetAttribute("Amount")
+                        if amount then
+                            totalCount = totalCount + amount
+                        else
+                            totalCount = totalCount + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return totalCount
+end
+
+local function getPlacedEggCountByName(eggName)
+    if not eggName or eggName == "" then return 0 end
+    local petEggsList = myFunctions.getMyFarmPetEggs()
+    local count = 0
+
+    for _, egg in ipairs(petEggsList) do
+        if egg:IsA("Model") then
+            local matched = false
+
+            local eggType = egg:GetAttribute("EggType")
+            if eggType and string.lower(tostring(eggType)):find(string.lower(eggName)) then
+                matched = true
+            end
+
+            if not matched then
+                local eggNameAttr = egg:GetAttribute("EggName")
+                if eggNameAttr and string.lower(tostring(eggNameAttr)):find(string.lower(eggName)) then
+                    matched = true
+                end
+            end
+
+            if not matched then
+                if string.lower(egg.Name):find(string.lower(eggName)) then
+                    matched = true
+                end
+            end
+
+            if not matched then
+                for _, child in ipairs(egg:GetChildren()) do
+                    if string.lower(child.Name):find(string.lower(eggName)) then
+                        matched = true
+                        break
+                    end
+                end
+            end
+
+            if matched then
+                count = count + 1
+            end
+        end
+    end
+
+    return count
+end
+
+local function getTotalEggCount(eggName)
+    local inventoryCount = getInventoryEggCount(eggName)
+    local placedCount = getPlacedEggCountByName(eggName)
+    return inventoryCount + placedCount
+end
+
+local function createEggStatusGUI()
+    local player = game.Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    if playerGui:FindFirstChild("EggStatusGUI") then
+        playerGui.EggStatusGUI:Destroy()
+    end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "EggStatusGUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 140, 0, 16)
+    frame.Position = UDim2.new(1, -150, 1, -20)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundTransparency = 0.3
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -4, 1, 0)
+    label.Position = UDim2.new(0, 2, 0, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 9
+    label.Font = Enum.Font.GothamBold
+    label.Text = "Egg Status: --"
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    eggStatusGUI = screenGui
+    eggStatusLabel = label
+    return screenGui
+end
+
+local function updateEggStatus(fixedValue, newValue, placedCount)
+    if not eggStatusLabel then return end
+    if fixedValue == nil then fixedValue = 0 end
+    if newValue == nil then newValue = 0 end
+    if placedCount == nil then placedCount = 0 end
+
+    local trendColor = Color3.fromRGB(255, 255, 255)
+    if newValue > fixedValue then
+        trendColor = Color3.fromRGB(100, 255, 100)
+    elseif newValue < fixedValue then
+        trendColor = Color3.fromRGB(255, 100, 100)
+    else
+        trendColor = Color3.fromRGB(255, 255, 255)
+    end
+
+    eggStatusLabel.Text = string.format("Egg Status: %d - %d", fixedValue, newValue)
+    eggStatusLabel.TextColor3 = trendColor
+end
+
+createEggStatusGUI()
+
+local eggStatusUpdateThread = nil
+local function startEggStatusRealTimeUpdate()
+    if eggStatusUpdateThread then return end
+
+    eggStatusUpdateThread = task.spawn(function()
+        while true do
+            if trackedEggName ~= "" and originalCaptured and originalEggCount then
+                local currentTotal = getTotalEggCount(trackedEggName)
+                local currentPlaced = getPlacedEggCountByName(trackedEggName)
+                updateEggStatus(originalEggCount, currentTotal, currentPlaced)
+            end
+            task.wait(0.5)
+        end
+    end)
+end
+
+startEggStatusRealTimeUpdate()
 
 -- ================== MAIN ==================
 local Window = Rayfield:CreateWindow({
@@ -95,86 +281,86 @@ local function sendDiscordWebhook(webhookUrl, message)
 end
 
 local function sendDiscordWebhookEmbedHatchMonitoring(webhookUrl,koiRefundCount,sealsRefundCount,hatchSpeed,curEggName,eggCount)
-	local Players = game:GetService("Players")
-	local HttpService = game:GetService("HttpService")
-	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-		warn("Invalid webhook URL")
-		return
-	end
-	local player = Players.LocalPlayer
-	if not player then
-		warn("Player not found")
-		return
-	end
+    local Players = game:GetService("Players")
+    local HttpService = game:GetService("HttpService")
+    if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+        warn("Invalid webhook URL")
+        return
+    end
+    local player = Players.LocalPlayer
+    if not player then
+        warn("Player not found")
+        return
+    end
 
-	-- Build Roblox Thumbnails API URL
-	local apiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..player.UserId.."&size=150x150&format=Png&isCircular=true"
+    -- Build Roblox Thumbnails API URL
+    local apiUrl = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="..player.UserId.."&size=150x150&format=Png&isCircular=true"
 
-	local req = syn and syn.request or http_request or request
-	if not req then
-		warn("HTTP request not supported")
-		return
-	end
+    local req = syn and syn.request or http_request or request
+    if not req then
+        warn("HTTP request not supported")
+        return
+    end
 
-	local avatarUrl
-	local success, response = pcall(function()
-		return req({Url = apiUrl, Method = "GET"})
-	end)
+    local avatarUrl
+    local success, response = pcall(function()
+        return req({Url = apiUrl, Method = "GET"})
+    end)
 
-	if success and response and response.Body then
-		local data = HttpService:JSONDecode(response.Body)
-		if data.data[1] and data.data[1].imageUrl then
-			avatarUrl = data.data[1].imageUrl
-		else
-			warn("Thumbnail not ready yet, imageUrl is nil")
-		end
-	else
-		warn("Failed to fetch thumbnail from Roblox API")
-	end
+    if success and response and response.Body then
+        local data = HttpService:JSONDecode(response.Body)
+        if data.data[1] and data.data[1].imageUrl then
+            avatarUrl = data.data[1].imageUrl
+        else
+            warn("Thumbnail not ready yet, imageUrl is nil")
+        end
+    else
+        warn("Failed to fetch thumbnail from Roblox API")
+    end
 
-	local embedData = {
-		title = "BHUB Hatch Monitoring",
-		color = 9511939,
-		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-		fields = {
-			{
-				name = "Player",
-				value = "||"..player.Name.."||",
-				inline = true
-			},
-			{
-				name = "Egg",
-				value = "Name: "..curEggName.." | "..eggCount.."\nSpeed: "..hatchSpeed,
-				inline = true
-			},
-			{
-				name = "Refunds",
-				value = "Koi: "..tostring(koiRefundCount).."\nSeals: "..tostring(sealsRefundCount),
-				inline = true
-			}
-		}
-	}
+    local embedData = {
+        title = "BHUB Hatch Monitoring",
+        color = 9511939,
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        fields = {
+            {
+                name = "Player",
+                value = "||"..player.Name.."||",
+                inline = true
+            },
+            {
+                name = "Egg",
+                value = "Name: "..curEggName.." | "..eggCount.."\nSpeed: "..hatchSpeed,
+                inline = true
+            },
+            {
+                name = "Refunds",
+                value = "Koi: "..tostring(koiRefundCount).."\nSeals: "..tostring(sealsRefundCount),
+                inline = true
+            }
+        }
+    }
 
-	if avatarUrl then
-		embedData.thumbnail = {url = avatarUrl}
-	end
+    if avatarUrl then
+        embedData.thumbnail = {url = avatarUrl}
+    end
 
-	local payload = HttpService:JSONEncode({embeds = {embedData}})
+    local payload = HttpService:JSONEncode({embeds = {embedData}})
 
-	pcall(function()
-		req({
-			Url = webhookUrl,
-			Method = "POST",
-			Headers = {["Content-Type"] = "application/json"},
-			Body = payload
-		})
-	end)
+    pcall(function()
+        req({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = payload
+        })
+    end)
 end
 
 local function sendPetDataWebhook(webhookUrl, petName, kgMode, baseKG, price, seller)
-	local Players = game:GetService("Players")
-	local HttpService = game:GetService("HttpService")
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players = game:GetService("Players")
+    local HttpService = game:GetService("HttpService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local prefix
     if kgMode == "above" then
         prefix = ">"
@@ -182,206 +368,96 @@ local function sendPetDataWebhook(webhookUrl, petName, kgMode, baseKG, price, se
         prefix = "<"
     end
 
-	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-		warn("Invalid webhook URL")
-		return
-	end
+    if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+        warn("Invalid webhook URL")
+        return
+    end
 
-	local player = Players.LocalPlayer
-	if not player then
-		warn("Player not found")
-		return
-	end
+    local player = Players.LocalPlayer
+    if not player then
+        warn("Player not found")
+        return
+    end
 
-	local PetModule = require(
-		ReplicatedStorage
-			:WaitForChild("Modules")
-			:WaitForChild("GardenGuideModules")
-			:WaitForChild("DataModules")
-			:WaitForChild("PetData")
-	)
+    local PetModule = require(
+        ReplicatedStorage
+            :WaitForChild("Modules")
+            :WaitForChild("GardenGuideModules")
+            :WaitForChild("DataModules")
+            :WaitForChild("PetData")
+    )
 
-	if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
-		warn("Pet not found in module")
-		return
-	end
+    if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
+        warn("Pet not found in module")
+        return
+    end
 
-	local petInfo = PetModule.Data[petName]
-	local imageId = petInfo.ImageId
-	local numericId
-	if type(imageId) == "string" then
-		numericId = string.match(imageId, "%d+")
-	elseif type(imageId) == "number" then
-		numericId = tostring(imageId)
-	end
+    local petInfo = PetModule.Data[petName]
+    local imageId = petInfo.ImageId
+    local numericId
+    if type(imageId) == "string" then
+        numericId = string.match(imageId, "%d+")
+    elseif type(imageId) == "number" then
+        numericId = tostring(imageId)
+    end
 
-	local thumbnailUrl
-	if numericId then
-		local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
-		local req = syn and syn.request or http_request or request
-		if req then
-			local success, response = pcall(function()
-				return req({
-					Url = thumbEndpoint,
-					Method = "GET"
-				})
-			end)
-			if success and response and response.Body then
-				local decoded = HttpService:JSONDecode(response.Body)
-				if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-					thumbnailUrl = decoded.data[1].imageUrl
-				end
-			end
-		end
-	end
+    local thumbnailUrl
+    if numericId then
+        local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
+        local req = syn and syn.request or http_request or request
+        if req then
+            local success, response = pcall(function()
+                return req({
+                    Url = thumbEndpoint,
+                    Method = "GET"
+                })
+            end)
+            if success and response and response.Body then
+                local decoded = HttpService:JSONDecode(response.Body)
+                if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+                    thumbnailUrl = decoded.data[1].imageUrl
+                end
+            end
+        end
+    end
 
-	local embedData = {
-		-- title = petInfo.Name or petName,
-		title = "BeastHub Sniper! "..(petInfo.Name or petName),
-		description = petInfo.Description or "No description",
-		color = 16744192,
-		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-		fields = {
-			{
-				name = "Rarity",
-				value = tostring(petInfo.Rarity),
-				inline = true
-			},
-			{
-				name = "Base KG",
-				value = prefix..baseKG,
-				inline = true
-			},
-			{
-				name = "Price",
-				value = price,
-				inline = true
-			},
-			{
-				name = "Seller",
-				value = "||"..seller.."||",
-				inline = true
-			}
-		}
-	}
-
-	if thumbnailUrl then
-		embedData.thumbnail = {
-			url = thumbnailUrl
-		}
-	end
-
-	local payload = HttpService:JSONEncode({
-        content = "@everyone",
-        allowed_mentions = {
-            parse = {"everyone"}
-        },
-		embeds = {embedData}
-	})
-
-	local req = syn and syn.request or http_request or request
-	if not req then
-		warn("HTTP not supported")
-		return
-	end
-
-	pcall(function()
-		req({
-			Url = webhookUrl,
-			Method = "POST",
-			Headers = {
-				["Content-Type"] = "application/json"
-			},
-			Body = payload
-		})
-	end)
-end
-
-local function sendWebhookHuge(webhookUrl, playerName, petName, curEggName, baseKG, desc)
-	local HttpService = game:GetService("HttpService")
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local baseNum = tonumber(baseKG)
-    local brontoKG = baseNum and string.format("%.2f", baseNum * 1.3) or "N/A"
-    local req = syn and syn.request or http_request or request
-
-	if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
-		warn("Invalid webhook URL")
-		return
-	end
-
-	local PetModule = require(
-		ReplicatedStorage
-			:WaitForChild("Modules")
-			:WaitForChild("GardenGuideModules")
-			:WaitForChild("DataModules")
-			:WaitForChild("PetData")
-	)
-
-	if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
-		warn("Pet not found in module")
-		return
-	end
-
-	local petInfo = PetModule.Data[petName]
-	local imageId = petInfo.ImageId
-	local numericId
-	if type(imageId) == "string" then
-		numericId = string.match(imageId, "%d+")
-	elseif type(imageId) == "number" then
-		numericId = tostring(imageId)
-	end
-
-	local thumbnailUrl
-	if numericId then
-		local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
-		if req then
-			local success, response = pcall(function()
-				return req({
-					Url = thumbEndpoint,
-					Method = "GET"
-				})
-			end)
-			if success and response and response.Body then
-				local decoded = HttpService:JSONDecode(response.Body)
-				if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
-					thumbnailUrl = decoded.data[1].imageUrl
-				end
-			end
-		end
-	end
-
-	local embedData = {
-		-- title = petInfo.Name or petName,
-		title = "BeastHub Huge Hatch! " .. (petInfo.Name or petName),
-		description = tostring(curEggName).." | "..tostring(desc),
-		color = 52480,
-		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
-		fields = {
+    local embedData = {
+        -- title = petInfo.Name or petName,
+        title = "BeastHub Sniper! "..(petInfo.Name or petName),
+        description = petInfo.Description or "No description",
+        color = 16744192,
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        fields = {
             {
-				name = "Player",
-				value = "||"..playerName.."||",
-				inline = true
-			},
-			{
-				name = "Rarity",
-				value = tostring(petInfo.Rarity),
-				inline = true
-			},
-			{
-				name = "Base KG",
-				value = tostring(baseKG).." ("..brontoKG.." if +30%)",
-				inline = true
-			}
-		}
-	}
+                name = "Rarity",
+                value = tostring(petInfo.Rarity),
+                inline = true
+            },
+            {
+                name = "Base KG",
+                value = prefix..baseKG,
+                inline = true
+            },
+            {
+                name = "Price",
+                value = price,
+                inline = true
+            },
+            {
+                name = "Seller",
+                value = "||"..seller.."||",
+                inline = true
+            }
+        }
+    }
 
-	if thumbnailUrl then
-		embedData.thumbnail = {
-			url = thumbnailUrl
-		}
-	end
+    if thumbnailUrl then
+        embedData.thumbnail = {
+            url = thumbnailUrl
+        }
+    end
 
-	local payload = HttpService:JSONEncode({
+    local payload = HttpService:JSONEncode({
         content = "@everyone",
         allowed_mentions = {
             parse = {"everyone"}
@@ -389,21 +465,131 @@ local function sendWebhookHuge(webhookUrl, playerName, petName, curEggName, base
         embeds = {embedData}
     })
 
-	if not req then
-		warn("HTTP not supported")
-		return
-	end
+    local req = syn and syn.request or http_request or request
+    if not req then
+        warn("HTTP not supported")
+        return
+    end
 
-	pcall(function()
-		req({
-			Url = webhookUrl,
-			Method = "POST",
-			Headers = {
-				["Content-Type"] = "application/json"
-			},
-			Body = payload
-		})
-	end)
+    pcall(function()
+        req({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = payload
+        })
+    end)
+end
+
+local function sendWebhookHuge(webhookUrl, playerName, petName, curEggName, baseKG, desc)
+    local HttpService = game:GetService("HttpService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local baseNum = tonumber(baseKG)
+    local brontoKG = baseNum and string.format("%.2f", baseNum * 1.3) or "N/A"
+    local req = syn and syn.request or http_request or request
+
+    if typeof(webhookUrl) ~= "string" or webhookUrl == "" then
+        warn("Invalid webhook URL")
+        return
+    end
+
+    local PetModule = require(
+        ReplicatedStorage
+            :WaitForChild("Modules")
+            :WaitForChild("GardenGuideModules")
+            :WaitForChild("DataModules")
+            :WaitForChild("PetData")
+    )
+
+    if not PetModule or not PetModule.Data or not PetModule.Data[petName] then
+        warn("Pet not found in module")
+        return
+    end
+
+    local petInfo = PetModule.Data[petName]
+    local imageId = petInfo.ImageId
+    local numericId
+    if type(imageId) == "string" then
+        numericId = string.match(imageId, "%d+")
+    elseif type(imageId) == "number" then
+        numericId = tostring(imageId)
+    end
+
+    local thumbnailUrl
+    if numericId then
+        local thumbEndpoint = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. numericId .. "&size=420x420&format=Png&isCircular=false"
+        if req then
+            local success, response = pcall(function()
+                return req({
+                    Url = thumbEndpoint,
+                    Method = "GET"
+                })
+            end)
+            if success and response and response.Body then
+                local decoded = HttpService:JSONDecode(response.Body)
+                if decoded and decoded.data and decoded.data[1] and decoded.data[1].imageUrl then
+                    thumbnailUrl = decoded.data[1].imageUrl
+                end
+            end
+        end
+    end
+
+    local embedData = {
+        -- title = petInfo.Name or petName,
+        title = "BeastHub Huge Hatch! " .. (petInfo.Name or petName),
+        description = tostring(curEggName).." | "..tostring(desc),
+        color = 52480,
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+        fields = {
+            {
+                name = "Player",
+                value = "||"..playerName.."||",
+                inline = true
+            },
+            {
+                name = "Rarity",
+                value = tostring(petInfo.Rarity),
+                inline = true
+            },
+            {
+                name = "Base KG",
+                value = tostring(baseKG).." ("..brontoKG.." if +30%)",
+                inline = true
+            }
+        }
+    }
+
+    if thumbnailUrl then
+        embedData.thumbnail = {
+            url = thumbnailUrl
+        }
+    end
+
+    local payload = HttpService:JSONEncode({
+        content = "@everyone",
+        allowed_mentions = {
+            parse = {"everyone"}
+        },
+        embeds = {embedData}
+    })
+
+    if not req then
+        warn("HTTP not supported")
+        return
+    end
+
+    pcall(function()
+        req({
+            Url = webhookUrl,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = payload
+        })
+    end)
 end
 
 -- Safe Reload button
@@ -411,7 +597,7 @@ local function reloadScript(message)
     -- Reset flags first so main script can run again
     getgenv().BeastHubLoaded = false
     getgenv().BeastHubRayfield = nil
- 
+
     -- Destroy existing Rayfield UI safely
     if Rayfield and Rayfield.Destroy then
         Rayfield:Destroy()
@@ -420,7 +606,7 @@ local function reloadScript(message)
         game:GetService("CoreGui").Rayfield:Destroy()
         print("Rayfield destroyed in CoreGui")
     end
- 
+
     -- Reload main script
     if getgenv().BeastHubLink then
         local ok, err = pcall(function()
@@ -447,12 +633,12 @@ end
 local function equipItemByName(itemName)
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-	-- player.Character.Humanoid:UnequipTools() --unequip all first
+    -- player.Character.Humanoid:UnequipTools() --unequip all first
 
     for _, tool in ipairs(backpack:GetChildren()) do
         if tool:IsA("Tool") and string.find(tool.Name, itemName) then
             --print("Equipping:", tool.Name)
-			player.Character.Humanoid:UnequipTools() --unequip all first
+            player.Character.Humanoid:UnequipTools() --unequip all first
             player.Character.Humanoid:EquipTool(tool)
             return true -- stop after first match
         end
@@ -461,40 +647,40 @@ local function equipItemByName(itemName)
 end
 
 local function equipItemByNameV2(itemName) --for eggs
-	local player = game.Players.LocalPlayer
-	local backpack = player:WaitForChild("Backpack")
-	-- player.Character.Humanoid:UnequipTools()
+    local player = game.Players.LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
+    -- player.Character.Humanoid:UnequipTools()
 
-	for _, tool in ipairs(backpack:GetChildren()) do
-		if tool:IsA("Tool") then
-			local name = tool.Name
-			local cleaned = string.match(name, "^(.-)%s+x%d+$") or name
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            local name = tool.Name
+            local cleaned = string.match(name, "^(.-)%s+x%d+$") or name
 
-			if cleaned == itemName then
-				-- player.Character.Humanoid:UnequipTools()
-				player.Character.Humanoid:EquipTool(tool)
-				return true
-			end
-		end
-	end
-	return false
+            if cleaned == itemName then
+                -- player.Character.Humanoid:UnequipTools()
+                player.Character.Humanoid:EquipTool(tool)
+                return true
+            end
+        end
+    end
+    return false
 end
 
 local function equipPetByName(itemName) --for pets
-	local player = game.Players.LocalPlayer
-	local backpack = player:WaitForChild("Backpack")
+    local player = game.Players.LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
 
-	for _, tool in ipairs(backpack:GetChildren()) do
-		if tool:IsA("Tool") then
-			local name = tool.Name
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            local name = tool.Name
             if itemName == name then
                 print("Selling: "..itemName)
                 player.Character.Humanoid:EquipTool(tool)
-			    return true
+                return true
             end
-		end
-	end
-	return false
+        end
+    end
+    return false
 end
 
 --=======HANDLE LOCATIONS FOR  AUTO PLACE EGG
@@ -683,68 +869,68 @@ local function getFarmEggLocations()
 end
 
 local function testLocation(offset)
-	local player = game.Players.LocalPlayer
-	local character = player.Character or player.CharacterAdded:Wait()
-	local hrp = character:FindFirstChild("HumanoidRootPart")
-	if not hrp then
-		warn("HumanoidRootPart not found")
-		return
-	end
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then
+        warn("HumanoidRootPart not found")
+        return
+    end
 
-	local spawnCFrame = getFarmSpawnCFrame()
-	if not spawnCFrame then
-		warn("Spawn point not found")
-		return
-	end
+    local spawnCFrame = getFarmSpawnCFrame()
+    if not spawnCFrame then
+        warn("Spawn point not found")
+        return
+    end
 
-	if not offset or typeof(offset) ~= "Vector3" then
-		warn("Invalid offset provided")
-		return
-	end
+    if not offset or typeof(offset) ~= "Vector3" then
+        warn("Invalid offset provided")
+        return
+    end
 
-	local targetPos = spawnCFrame:PointToWorldSpace(offset)
-	hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+    local targetPos = spawnCFrame:PointToWorldSpace(offset)
+    hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
 end
 
 --preload custom loadouts
 getgenv().preloadedCustomLoadouts = {}
 local function preloadCustomLoadouts()
-	local saveFolder = "BeastHub"
+    local saveFolder = "BeastHub"
 
-	if not isfolder(saveFolder) then
-		makefolder(saveFolder)
-	end
+    if not isfolder(saveFolder) then
+        makefolder(saveFolder)
+    end
 
-	local data = {}
-	local files = {}
+    local data = {}
+    local files = {}
 
-	local ok, rawFiles = pcall(function()
-		return listfiles(saveFolder)
-	end)
+    local ok, rawFiles = pcall(function()
+        return listfiles(saveFolder)
+    end)
 
-	if ok and type(rawFiles) == "table" then
-		for _, filePath in ipairs(rawFiles) do
-			if type(filePath) == "string" and string.match(filePath, "%.txt$") then
-				local name = filePath:match("([^/\\]+)%.txt$")
-				if name and name ~= "" then
-					files[#files+1] = name
+    if ok and type(rawFiles) == "table" then
+        for _, filePath in ipairs(rawFiles) do
+            if type(filePath) == "string" and string.match(filePath, "%.txt$") then
+                local name = filePath:match("([^/\\]+)%.txt$")
+                if name and name ~= "" then
+                    files[#files+1] = name
 
-					local fOk, content = pcall(function()
-						return readfile(filePath)
-					end)
+                    local fOk, content = pcall(function()
+                        return readfile(filePath)
+                    end)
 
-					data[name] = fOk and content or ""
-				end
-			end
-		end
-	end
+                    data[name] = fOk and content or ""
+                end
+            end
+        end
+    end
 
-	table.sort(files, function(a, b)
-		return string.lower(a) < string.lower(b)
-	end)
+    table.sort(files, function(a, b)
+        return string.lower(a) < string.lower(b)
+    end)
 
-	getgenv().preloadedCustomLoadouts = data
-	getgenv().preloadedCustomLoadoutNames = files -- optional helper
+    getgenv().preloadedCustomLoadouts = data
+    getgenv().preloadedCustomLoadoutNames = files -- optional helper
 end
 preloadCustomLoadouts()
 getgenv().preloadCustomLoadouts = preloadCustomLoadouts
@@ -789,20 +975,20 @@ table.sort(petListNamesOnlyAndSorted)
 
 --v2
 local function getAllSeedsTableV2()
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local PlantDataModule = ReplicatedStorage
-		:WaitForChild("Modules")
-		:WaitForChild("GardenGuideModules")
-		:WaitForChild("DataModules")
-		:WaitForChild("PlantData")
-	local PlantData = require(PlantDataModule)
-	if typeof(PlantData) ~= "table" then
-		return nil
-	end
-	if typeof(PlantData.Data) ~= "table" then
-		return nil
-	end
-	return PlantData.Data
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local PlantDataModule = ReplicatedStorage
+        :WaitForChild("Modules")
+        :WaitForChild("GardenGuideModules")
+        :WaitForChild("DataModules")
+        :WaitForChild("PlantData")
+    local PlantData = require(PlantDataModule)
+    if typeof(PlantData) ~= "table" then
+        return nil
+    end
+    if typeof(PlantData.Data) ~= "table" then
+        return nil
+    end
+    return PlantData.Data
 end
 local allSeedsData = getAllSeedsTableV2()
 
@@ -820,58 +1006,58 @@ end
 
 
 local function equipFruitById(fruitId)
-	local player = game.Players.LocalPlayer
-	local backpack = player:WaitForChild("Backpack")
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoid = character:WaitForChild("Humanoid")
+    local player = game.Players.LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
 
-	-- Unequip all tools first
-	humanoid:UnequipTools()
+    -- Unequip all tools first
+    humanoid:UnequipTools()
 
-	for _, tool in ipairs(backpack:GetChildren()) do
-		if tool:IsA("Tool") and tool:GetAttribute("c") == fruitId then
-			humanoid:EquipTool(tool)
-			return true -- successfully equipped
-		end
-	end
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:GetAttribute("c") == fruitId then
+            humanoid:EquipTool(tool)
+            return true -- successfully equipped
+        end
+    end
 
-	return false -- not found
+    return false -- not found
 end
 
 --LIVE
-local mainModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/main2.lua"))()
+local mainModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_main2.lua"))()
 --DEV MODE 
 -- local mainModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE PetsModule
--- local PetsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/bhubAlt/bhub_alt/refs/heads/main/bhubpets2.lua"))()
+ local PetsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_petsmodule.lua"))()
 --DEV MODE2 
-local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/MSMzxAYj"))()
+--local PetsModule = loadstring(game:HttpGet("https://pastebin.com/raw/MSMzxAYj"))()
 
 --LIVE AutomationModule
-local AutomationModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/bhubautomation2.lua"))()
+local AutomationModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_automation2.lua"))()
 --DEV MODE 2
 -- local AutomationModule = loadstring(game:HttpGet("https://pastebin.com/raw/AeFQvyJH"))()
 
 --LIVE LoadoutsModule
-local LoadoutsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/loadouts.lua"))()
+local LoadoutsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_loadouts.lua"))()
 --DEV MODE 2
 -- local LoadoutsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --LIVE TraderModule
-local TraderModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/trader.lua"))()
+local TraderModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_trader.lua"))()
 --DEV MODE2 
 -- local TraderModule = loadstring(game:HttpGet("https://pastebin.com/raw/evwpQQfM"))()
 
 --LIVE PlantsModule
-local PlantsModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/plants.lua"))()
+local PlantsModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_plants.lua"))()
 --DEV MODE2 
 -- local PlantsModule = loadstring(game:HttpGet("https://pastebin.com/raw/"))()
 
 --Live CraftModule
-local CraftModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/crafting.lua"))()
+local CraftModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_craft.lua"))()
 
-local EventModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/XxMarDdEvsZXsWu69/bhubalt/refs/heads/main/event.lua"))()
+local EventModule = loadstring(game:HttpGet("https://markdevs.vercel.app/dev_event.lua"))()
 
 mainModule.init(Rayfield, beastHubNotify, Window, myFunctions, reloadScript, beastHubIcon)
 
@@ -1003,7 +1189,7 @@ local Toggle_autoBuySeedsTier1_selected = Shops:CreateToggle({
 
             if #SelectedSeeds > 0 then
                 --print("[BeastHub] Auto-buying selected seeds:", table.concat(SelectedSeeds, ", "))
-                
+
                 -- pass a function for dynamic check
                 myFunctions.buyItemsLive(
                     game:GetService("ReplicatedStorage").GameEvents.BuySeedStock,
@@ -1278,35 +1464,35 @@ Shops:CreateSection("Traveling Merchant")
 local function getTravelingMerchantsData()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local dataModule = ReplicatedStorage:WaitForChild("Data"):WaitForChild("TravelingMerchant"):WaitForChild("TravelingMerchantData")
-	local success, data = pcall(require, dataModule)
-	if not success or type(data) ~= "table" then
-		return {}
-	end
-	return data
+    local success, data = pcall(require, dataModule)
+    if not success or type(data) ~= "table" then
+        return {}
+    end
+    return data
 end
 local travelingMerchantData = getTravelingMerchantsData()
 
 local function getTravelingMerchantKeys()
-	-- local merchantData = getTravelingMerchantsData() --travelingMerchantData
-	local merchants = {}
-	for merchantName, _ in pairs(travelingMerchantData) do
-		table.insert(merchants, merchantName)
-	end
-	table.sort(merchants)
-	return merchants
+    -- local merchantData = getTravelingMerchantsData() --travelingMerchantData
+    local merchants = {}
+    for merchantName, _ in pairs(travelingMerchantData) do
+        table.insert(merchants, merchantName)
+    end
+    table.sort(merchants)
+    return merchants
 end
 
 local function getMerchantShopItems(merchantName)
-	local merchant = travelingMerchantData[merchantName]
-	if not merchant or type(merchant.ShopData) ~= "table" then
-		return {}
-	end
-	local items = {}
-	for itemName, itemData in pairs(merchant.ShopData) do
-		table.insert(items, itemName.." | "..itemData.ItemType)
-	end
-	table.sort(items)
-	return items
+    local merchant = travelingMerchantData[merchantName]
+    if not merchant or type(merchant.ShopData) ~= "table" then
+        return {}
+    end
+    local items = {}
+    for itemName, itemData in pairs(merchant.ShopData) do
+        table.insert(items, itemName.." | "..itemData.ItemType)
+    end
+    table.sort(items)
+    return items
 end
 
 local travelingMerchants = getTravelingMerchantKeys()
@@ -1316,86 +1502,86 @@ local merchantDropdowns = {}
 
 --dropdown creation loop
 for _, merchantName in ipairs(travelingMerchants) do
-	merchantSelections[merchantName] = {}
-	local dropdown = Shops:CreateDropdown({
-		Name = merchantName,
-		Options = getMerchantShopItems(merchantName),
-		CurrentOption = {},
-		MultipleOptions = true,
-		Flag = "dropdown_" .. merchantName:gsub(" ", ""),
-		Callback = function(options)
-			merchantSelections[merchantName] = options
-		end,
-	})
-	merchantDropdowns[merchantName] = dropdown
+    merchantSelections[merchantName] = {}
+    local dropdown = Shops:CreateDropdown({
+        Name = merchantName,
+        Options = getMerchantShopItems(merchantName),
+        CurrentOption = {},
+        MultipleOptions = true,
+        Flag = "dropdown_" .. merchantName:gsub(" ", ""),
+        Callback = function(options)
+            merchantSelections[merchantName] = options
+        end,
+    })
+    merchantDropdowns[merchantName] = dropdown
 end
 
 local itemTypes_travelingMerchantShopItems = {
-	"Gear",
-	"Seed",
-	"Crate",
-	"Egg",
-	"Pet",
-	"Cosmetic",
-	"Seed Pack",
-	"Fence"
+    "Gear",
+    "Seed",
+    "Crate",
+    "Egg",
+    "Pet",
+    "Cosmetic",
+    "Seed Pack",
+    "Fence"
 }
 
 for _, itemType in ipairs(itemTypes_travelingMerchantShopItems) do
-	Shops:CreateButton({
-		Name = "Select All " .. itemType,
-		Callback = function()
-			for merchantName, dropdown in pairs(merchantDropdowns) do
-				local options = dropdown.Options or {}
-				local current = merchantSelections[merchantName] or {}
-				local selectedMap = {}
+    Shops:CreateButton({
+        Name = "Select All " .. itemType,
+        Callback = function()
+            for merchantName, dropdown in pairs(merchantDropdowns) do
+                local options = dropdown.Options or {}
+                local current = merchantSelections[merchantName] or {}
+                local selectedMap = {}
 
-				for _, v in ipairs(current) do
-					selectedMap[v] = true
-				end
+                for _, v in ipairs(current) do
+                    selectedMap[v] = true
+                end
 
-				for _, option in ipairs(options) do
-					if string.match(option, "%|%s*" .. itemType .. "$") then
-						if not selectedMap[option] then
-							table.insert(current, option)
-							selectedMap[option] = true
-						end
-					end
-				end
+                for _, option in ipairs(options) do
+                    if string.match(option, "%|%s*" .. itemType .. "$") then
+                        if not selectedMap[option] then
+                            table.insert(current, option)
+                            selectedMap[option] = true
+                        end
+                    end
+                end
 
-				dropdown:Set(current)
-				merchantSelections[merchantName] = current
-			end
-		end,
-	})
+                dropdown:Set(current)
+                merchantSelections[merchantName] = current
+            end
+        end,
+    })
 end
 
 
 Shops:CreateButton({
-	Name = "Clear All Selections",
-	Callback = function()
-		for merchantName, dropdown in pairs(merchantDropdowns) do
-			dropdown:Set({})
-			merchantSelections[merchantName] = {}
-		end
-	end,
+    Name = "Clear All Selections",
+    Callback = function()
+        for merchantName, dropdown in pairs(merchantDropdowns) do
+            dropdown:Set({})
+            merchantSelections[merchantName] = {}
+        end
+    end,
 })
 
 
 local autoBuyTravelingMerchantEnabled = false
 local autoBuyTravelingMerchantThread = nil
 Shops:CreateToggle({
-	Name = "Auto Buy Traveling Merchant",
-	CurrentValue = false,
-	Flag = "autoBuyTravelingMerchant",
-	Callback = function(Value)
-		autoBuyTravelingMerchantEnabled = Value
+    Name = "Auto Buy Traveling Merchant",
+    CurrentValue = false,
+    Flag = "autoBuyTravelingMerchant",
+    Callback = function(Value)
+        autoBuyTravelingMerchantEnabled = Value
 
-		if autoBuyTravelingMerchantEnabled then
-			if autoBuyTravelingMerchantThread then
-				return
-			end
-			-- beastHubNotify("Auto Buy Traveling Merchant running", "", 3)
+        if autoBuyTravelingMerchantEnabled then
+            if autoBuyTravelingMerchantThread then
+                return
+            end
+            -- beastHubNotify("Auto Buy Traveling Merchant running", "", 3)
             local function getTravelingMerchantStocksData()
                 local dataService = require(game:GetService("ReplicatedStorage").Modules.DataService)
                 local logs = dataService:GetData()
@@ -1403,8 +1589,8 @@ Shops:CreateToggle({
             end
             local travelingMerchantStocksData = getTravelingMerchantStocksData()
 
-			autoBuyTravelingMerchantThread = task.spawn(function()
-				travelingMerchantData = getTravelingMerchantsData()
+            autoBuyTravelingMerchantThread = task.spawn(function()
+                travelingMerchantData = getTravelingMerchantsData()
                 while autoBuyTravelingMerchantEnabled do
                     local stockData = getTravelingMerchantStocksData()
                     local activeMerchant = stockData.MerchantType
@@ -1436,15 +1622,15 @@ Shops:CreateToggle({
                     task.wait(2)
                 end
 
-				autoBuyTravelingMerchantThread = nil
-			end)
-		else
-			autoBuyTravelingMerchantEnabled = false
-			if autoBuyTravelingMerchantThread then
-				autoBuyTravelingMerchantThread = nil
-			end
-		end
-	end,
+                autoBuyTravelingMerchantThread = nil
+            end)
+        else
+            autoBuyTravelingMerchantEnabled = false
+            if autoBuyTravelingMerchantThread then
+                autoBuyTravelingMerchantThread = nil
+            end
+        end
+    end,
 })
 
 
@@ -1679,6 +1865,21 @@ local Toggle_autoPlaceEggs = PetEggs:CreateToggle({
         --=======================================
 
         if Value then
+            -- Capture original egg count for Egg Status GUI
+            local selectedEgg = Dropdown_eggToPlace.CurrentOption[1] or ""
+            if selectedEgg ~= "" then
+                if trackedEggName ~= selectedEgg then
+                    trackedEggName = selectedEgg
+                    originalEggCount = getTotalEggCount(trackedEggName)
+                    originalCaptured = true
+                elseif not originalCaptured then
+                    trackedEggName = selectedEgg
+                    originalEggCount = getTotalEggCount(trackedEggName)
+                    originalCaptured = true
+                end
+                updateEggStatus(originalEggCount, getTotalEggCount(trackedEggName), getPlacedEggCountByName(trackedEggName))
+            end
+
             beastHubNotify("Auto place eggs: ON", "Max Eggs to place: "..tostring(eggsToPlaceInput), 4)
             autoPlaceEggsEnabled = true
             local autoPlaceEggLocations = getFarmEggLocations() --off setting for dynamic farm location
@@ -1688,6 +1889,13 @@ local Toggle_autoPlaceEggs = PetEggs:CreateToggle({
                     local currentEggsInFarm = getFarmEggCount()
                     --print("maxFarmEggs:", maxFarmEggs)
                     --print("currentEggsInFarm:", currentEggsInFarm)
+
+                    -- Update Egg Status GUI
+                    if trackedEggName ~= "" and originalCaptured then
+                        local currentInventory = getTotalEggCount(trackedEggName)
+                        local currentPlaced = getPlacedEggCountByName(trackedEggName)
+                        updateEggStatus(originalEggCount, currentInventory, currentPlaced)
+                    end
 
                     if currentEggsInFarm < maxFarmEggs then
                         for _, location in ipairs(autoPlaceEggLocations) do
@@ -1712,7 +1920,14 @@ local Toggle_autoPlaceEggs = PetEggs:CreateToggle({
                             else
                                 currentEggsInFarm = currentEggsInFarm + 1
                             end
-                            
+
+                            -- Update Egg Status GUI after each placement
+                            if trackedEggName ~= "" and originalCaptured then
+                                local currentInventory = getTotalEggCount(trackedEggName)
+                                local currentPlaced = getPlacedEggCountByName(trackedEggName)
+                                updateEggStatus(originalEggCount, currentInventory, currentPlaced)
+                            end
+
                         end
                     else
                         isDonePlacingEgg = true
@@ -1723,6 +1938,12 @@ local Toggle_autoPlaceEggs = PetEggs:CreateToggle({
         else
             autoPlaceEggsEnabled = false
             autoPlaceEggsThread = nil
+            -- Show final status when stopped
+            if trackedEggName ~= "" and originalCaptured then
+                local finalInventory = getTotalEggCount(trackedEggName)
+                local finalPlaced = getPlacedEggCountByName(trackedEggName)
+                updateEggStatus(originalEggCount, finalInventory, finalPlaced)
+            end
             -- beastHubNotify("Auto place eggs: OFF", "", 2)
         end
     end,
@@ -1733,7 +1954,7 @@ PetEggs:CreateButton({
     Name = "Click to HATCH ALL",
     Callback = function()
         print("[BeastHub] Hatching eggs...")
-        
+
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local PetEggService = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("PetEggService")
 
@@ -1770,7 +1991,7 @@ local function autoSellPets(targetPets, weightTargetBelow, onComplete)
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
     local SellPet_RE = game:GetService("ReplicatedStorage").GameEvents.SellPet_RE
-	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+    player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
     for _, item in ipairs(backpack:GetChildren()) do
         local b = item:GetAttribute("b") -- pet type
@@ -1865,9 +2086,9 @@ local Dropdown_petList = PetEggs:CreateDropdown({
     MultipleOptions = true,
     Flag = "autoSellPetsSelection", 
     Callback = function(Options)
-        
+
         selectedPetsForAutoSell = Options
-        
+
         local names = table.concat(Options, ", ")
         if names == "" then
             names = "No pets selected."
@@ -1995,7 +2216,7 @@ local function autoSellPets3(targetPets, weightTargetBelow, onComplete)
     mainModule.isSafeToPickPlace = false
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+    player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
     beastHubNotify("Sell delay: "..(tostring(Input_delayToSell.CurrentValue) or ""),"",3)
     task.wait(tonumber(Input_delayToSell.CurrentValue) or 2)
 
@@ -2056,10 +2277,10 @@ local function autoSellPets2(targetPets, weightTargetBelow, onComplete)
     mainModule.isSafeToPickPlace = false
     local player = game.Players.LocalPlayer
     local backpack = player:WaitForChild("Backpack")
-	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+    player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
     beastHubNotify("Sell delay: "..tostring(Input_delayToSell.CurrentValue) or "","",3)
     task.wait(tonumber(Input_delayToSell.CurrentValue) or 2)
-    
+
     for _, item in ipairs(backpack:GetChildren()) do
         local b = item:GetAttribute("b") -- pet type
         local d = item:GetAttribute("d") -- favorite
@@ -2082,11 +2303,11 @@ local function autoSellPets2(targetPets, weightTargetBelow, onComplete)
 
             if isTarget and weight and weight < weightTargetBelow then
                 --fire the event here
-				local success = pcall(function()
+                local success = pcall(function()
                     local args = {
                         [1] = item;
                     }
-					-- game:GetService("ReplicatedStorage"):WaitForChild("GameEvents", 5):WaitForChild("SellPet_RE", 5):FireServer(unpack(args))
+                    -- game:GetService("ReplicatedStorage"):WaitForChild("GameEvents", 5):WaitForChild("SellPet_RE", 5):FireServer(unpack(args))
                     game:GetService("ReplicatedStorage").GameEvents.SellPetShopSelected:FireServer(unpack(args))
                 end)
                 task.wait(0.05)
@@ -2104,157 +2325,157 @@ end
 -- local function isGoodToSellAll()
 --     beastHubNotify("Validating SELL ALL safety..", "Please wait", 5)
 --     local player = game.Players.LocalPlayer
--- 	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+--      player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
--- 	local rs = game:GetService("ReplicatedStorage")
--- 	local favUnfavEvent = rs.GameEvents.Favorite_Item
--- 	local backpack = player:WaitForChild("Backpack")
--- 	local listToCheckInBag = {}
+--      local rs = game:GetService("ReplicatedStorage")
+--      local favUnfavEvent = rs.GameEvents.Favorite_Item
+--      local backpack = player:WaitForChild("Backpack")
+--      local listToCheckInBag = {}
 --     local lastNotifyTime = tick()
 
--- 	local function getPlayerData()
--- 		local ok, dataService = pcall(function()
--- 			return require(game:GetService("ReplicatedStorage").Modules.DataService)
--- 		end)
--- 		if not ok or not dataService then
--- 			return nil
--- 		end
--- 		local ok2, logs = pcall(function()
--- 			return dataService:GetData()
--- 		end)
--- 		if not ok2 then
--- 			return nil
--- 		end
--- 		return logs
--- 	end
--- 	local playerData = getPlayerData()
--- 	if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
--- 		return false
--- 	end
--- 	local petInventory = playerData.PetsData.PetInventory.Data
--- 	for petId, data in pairs(petInventory) do
--- 		if data and data.PetType and data.PetData then
--- 			if not data.PetData.IsFavorite then
--- 				listToCheckInBag[petId] = true
--- 			end
--- 		end
--- 	end
--- 	for index, item in ipairs(backpack:GetChildren()) do
--- 		local petUuid = item:GetAttribute("PET_UUID")
+--      local function getPlayerData()
+--              local ok, dataService = pcall(function()
+--                      return require(game:GetService("ReplicatedStorage").Modules.DataService)
+--              end)
+--              if not ok or not dataService then
+--                      return nil
+--              end
+--              local ok2, logs = pcall(function()
+--                      return dataService:GetData()
+--              end)
+--              if not ok2 then
+--                      return nil
+--              end
+--              return logs
+--      end
+--      local playerData = getPlayerData()
+--      if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
+--              return false
+--      end
+--      local petInventory = playerData.PetsData.PetInventory.Data
+--      for petId, data in pairs(petInventory) do
+--              if data and data.PetType and data.PetData then
+--                      if not data.PetData.IsFavorite then
+--                              listToCheckInBag[petId] = true
+--                      end
+--              end
+--      end
+--      for index, item in ipairs(backpack:GetChildren()) do
+--              local petUuid = item:GetAttribute("PET_UUID")
 --         local d = item:GetAttribute("d") --favorited or not
--- 		if petUuid and listToCheckInBag[petUuid] then
--- 			local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
--- 			local petNameInBag = item.Name:match("^(.-)%s*%[")
+--              if petUuid and listToCheckInBag[petUuid] then
+--                      local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
+--                      local petNameInBag = item.Name:match("^(.-)%s*%[")
 --             if petNameInBag and string.find(petNameInBag, "Peppermint", 1, true) then
 --                 petNameInBag = petNameInBag:gsub("Peppermint", ""):gsub("^%s+", ""):gsub("%s+$", "")
 --             end
 --             if petNameInBag and string.find(petNameInBag, "SpiritSparkle", 1, true) then
 --                 petNameInBag = petNameInBag:gsub("SpiritSparkle", ""):gsub("^%s+", ""):gsub("%s+$", "")
 --             end
--- 			if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
+--                      if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
 --                 -- print("inside if, fav event")
--- 				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
--- 				favUnfavEvent:FireServer(item)
+--                              beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+--                              favUnfavEvent:FireServer(item)
 --                 task.wait(2)
--- 			elseif d == false and weight > sellBelow then
+--                      elseif d == false and weight > sellBelow then
 --                 -- print("inside else, fav event")
--- 				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
--- 				favUnfavEvent:FireServer(item)
+--                              beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+--                              favUnfavEvent:FireServer(item)
 --                 task.wait(2)
 --             else
 --                 -- print("IN ELSE")
--- 			end
--- 		end
+--                      end
+--              end
 --         -- notify every 2 seconds
 --         if tick() - lastNotifyTime >= 2 then
 --             beastHubNotify("Processing items... ("..index.."/"..#backpack:GetChildren()..")", "", 2)
 --             lastNotifyTime = tick()
 --         end
--- 		task.wait()
--- 	end
--- 	return true
+--              task.wait()
+--      end
+--      return true
 -- end
 
 local function isGoodToSellAllv2()
     beastHubNotify("Validating SELL ALL safety..", "Please wait", 5)
     local player = game.Players.LocalPlayer
-	player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
+    player.Character.Humanoid:UnequipTools() --unequip last pet held from hatch
 
-	local rs = game:GetService("ReplicatedStorage")
-	local favUnfavEvent = rs.GameEvents.Favorite_Item
-	local backpack = player:WaitForChild("Backpack")
-	local listToCheckInBag = {}
+    local rs = game:GetService("ReplicatedStorage")
+    local favUnfavEvent = rs.GameEvents.Favorite_Item
+    local backpack = player:WaitForChild("Backpack")
+    local listToCheckInBag = {}
     local baseKGlist = {}
     local lastNotifyTime = tick()
     sellBelow = tonumber(input_sellBelow.CurrentValue)
 
-	local function getPlayerData()
-		local ok, dataService = pcall(function()
-			return require(game:GetService("ReplicatedStorage").Modules.DataService)
-		end)
-		if not ok or not dataService then
-			return nil
-		end
-		local ok2, logs = pcall(function()
-			return dataService:GetData()
-		end)
-		if not ok2 then
-			return nil
-		end
-		return logs
-	end
-	local playerData = getPlayerData()
-	if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
-		return false
-	end
-	local petInventory = playerData.PetsData.PetInventory.Data
-	for petId, data in pairs(petInventory) do
-		if data and data.PetType and data.PetData then
-			if not data.PetData.IsFavorite then
+    local function getPlayerData()
+        local ok, dataService = pcall(function()
+            return require(game:GetService("ReplicatedStorage").Modules.DataService)
+        end)
+        if not ok or not dataService then
+            return nil
+        end
+        local ok2, logs = pcall(function()
+            return dataService:GetData()
+        end)
+        if not ok2 then
+            return nil
+        end
+        return logs
+    end
+    local playerData = getPlayerData()
+    if not playerData or not playerData.PetsData or not playerData.PetsData.PetInventory or not playerData.PetsData.PetInventory.Data then
+        return false
+    end
+    local petInventory = playerData.PetsData.PetInventory.Data
+    for petId, data in pairs(petInventory) do
+        if data and data.PetType and data.PetData then
+            if not data.PetData.IsFavorite then
                 local baseKG = data.PetData.BaseWeight
-				listToCheckInBag[petId] = true
+                listToCheckInBag[petId] = true
                 baseKGlist[petId] = baseKG
-			end
-		end
-	end
-	for index, item in ipairs(backpack:GetChildren()) do
-		local petUuid = item:GetAttribute("PET_UUID")
+            end
+        end
+    end
+    for index, item in ipairs(backpack:GetChildren()) do
+        local petUuid = item:GetAttribute("PET_UUID")
         local d = item:GetAttribute("d") --favorited or not
-		if petUuid and listToCheckInBag[petUuid] then
-			local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
+        if petUuid and listToCheckInBag[petUuid] then
+            local weight = tonumber(item.Name:match("%[(%d+%.?%d*)%s*[Kk][Gg]%]"))
             if sellAllBelowKGmode == "Base KG" then
                 weight = baseKGlist[petUuid] * 1.1
             end
 
-			local petNameInBag = item.Name:match("^(.-)%s*%[")
+            local petNameInBag = item.Name:match("^(.-)%s*%[")
             if petNameInBag and string.find(petNameInBag, "Peppermint", 1, true) then
                 petNameInBag = petNameInBag:gsub("Peppermint", ""):gsub("^%s+", ""):gsub("%s+$", "")
             end
             if petNameInBag and string.find(petNameInBag, "SpiritSparkle", 1, true) then
                 petNameInBag = petNameInBag:gsub("SpiritSparkle", ""):gsub("^%s+", ""):gsub("%s+$", "")
             end
-			if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
+            if d == false and not selectedPetsForAutoSellLookup[petNameInBag] then
                 -- print("inside if, fav event")
-				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
-				favUnfavEvent:FireServer(item)
+                beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+                favUnfavEvent:FireServer(item)
                 task.wait(2)
-			elseif d == false and weight > sellBelow then
+            elseif d == false and weight > sellBelow then
                 -- print("inside else, fav event")
-				beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
-				favUnfavEvent:FireServer(item)
+                beastHubNotify("Favorited: "..petNameInBag, "Size: "..weight, 5)
+                favUnfavEvent:FireServer(item)
                 task.wait(2)
             else
                 -- print("IN ELSE")
-			end
-		end
+            end
+        end
         -- notify every 2 seconds
         if tick() - lastNotifyTime >= 2 then
             beastHubNotify("Processing items... ("..index.."/"..#backpack:GetChildren()..")", "", 2)
             lastNotifyTime = tick()
         end
-		task.wait()
-	end
-	return true
+        task.wait()
+    end
+    return true
 end
 
 -- PetEggs:CreateLabel("Turn on SELL ALL toggle below to activate 50% seal cap. Reason: Seal bug", "alert-triangle") 
@@ -2264,7 +2485,7 @@ local toggle_useSellAllMethod = PetEggs:CreateToggle({
     CurrentValue = false,
     Flag = "useSellAllMethod", 
     Callback = function(Value)
-        
+
     end,
 })
 
@@ -2288,7 +2509,7 @@ PetEggs:CreateButton({
             mainModule.isSafeToPickPlace = false
             task.wait(2)
             myFunctions.switchToLoadout(sealsLoady, getFarmSpawnCFrame, beastHubNotify)
-			beastHubNotify("Waiting for Seals to load", "Auto Sell", "5")
+            beastHubNotify("Waiting for Seals to load", "Auto Sell", "5")
             task.wait(6)
         end
 
@@ -2369,7 +2590,7 @@ PetEggs:CreateButton({
             return false
         end
 
-        
+
         local equippedSeals = equippedPets()
         task.wait()
         if equippedSeals and isGoodToSell() then
@@ -2380,7 +2601,7 @@ PetEggs:CreateButton({
             beastHubNotify("Invalid Seals loadout!", "", 3)
         end
 
-        
+
     end,
 })
 PetEggs:CreateDivider()
@@ -2590,6 +2811,17 @@ local dropdown_bronto_loadout = PetEggs:CreateDropdown({
     end,
 })
 
+PetEggs:CreateToggle({
+  Name = "Show Egg Status",
+  CurrentValue = false,
+  Flag = "showEggStatusGUI",
+  Callback = function(Value)
+      if eggStatusGUI then
+          eggStatusGUI.Enabled = Value
+      end
+  end,
+})
+
 --bhub esp
 local bhubESPenabled = false
 local bhubESPthread = nil
@@ -2622,7 +2854,7 @@ local Toggle_bhubESP = PetEggs:CreateToggle({
         -- Turn ON
         if bhubESPenabled and not bhubESPthread then
             bhubEsp = function()
-            
+
             end--end function
 
             bhubESPthread = task.spawn(function()
@@ -2872,9 +3104,9 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
         local hatchStartTime = nil
         mainModule.isSafeToPickPlace = true
         -- task.wait(8)
-        
 
-        
+
+
 
         --get data for hatching security feature
         local function getPlayerData()
@@ -2996,7 +3228,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
         end
 
 
-    
+
         local function formatHatchDuration(duration)
             local totalSeconds = math.floor(duration)
             local hours = math.floor(totalSeconds / 3600)
@@ -3042,7 +3274,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
 
         --get egg picture assets
         local function getEggPics(eggName)
-            
+
         end
 
         -- If ON, start thread (only once)
@@ -3096,7 +3328,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                             end
                         end
                     end
-                
+
                     --check eggs
                     local myPetEggs = myFunctions.getMyFarmPetEggs()
                     local readyCounter = 0
@@ -3107,7 +3339,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                             readyCounter = readyCounter + 1
                         end
                     end
-                    
+
                     if #myPetEggs > 0 and #myPetEggs == readyCounter and smartAutoHatchingEnabled then
                         --all eggs ready to hatch
                         beastHubNotify("All eggs Ready!", "", 3)
@@ -3130,7 +3362,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                         local rareOrHugeFound
                         local ReplicatedStorage = game:GetService("ReplicatedStorage")
                         local PetEggService = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("PetEggService")
-                                                            
+
 
                         --all eggs now must start with koi loadout, infinite loadout has been patched 10/24/25
                         beastHubNotify("Switching to Kois", "", 3)
@@ -3194,7 +3426,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                     -- local stringKG = string.match(text, ".*=%s*<font.-'>(.-)</font>")
                                                     local petName = text:match('rgb%(%s*204,%s*204,%s*0%s*%)"><b>(.-)</b></font>')
                                                     local stringKG = text:match("=%s*(%d+%.?%d*)kg")
-                                                    
+
                                                     -- print("petName")
                                                     -- print(petName)
                                                     -- print("stringKG")
@@ -3225,7 +3457,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                             warn("Anti hatch not found")
                                                             return
                                                         end
-                                                        
+
                                                         -- check if Huge
                                                         local currentNumberKG = tonumber(stringKG)
                                                         if not currentNumberKG then
@@ -3260,13 +3492,13 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                                 --                 task.wait(5)
                                                                 --             end
                                                                 --         end
-                                                                        
+
                                                                 --     end
                                                                 -- else
                                                                     myFunctions.switchToLoadout(brontoLoady, getFarmSpawnCFrame, beastHubNotify)
                                                                     customSwitchedToKoi = false
                                                                 -- end
-                                                                
+
                                                                 task.wait(3)
                                                                 local equipped = equippedPets()
                                                                 if equipped and smartAutoHatchingEnabled and isGoodToHatch() then
@@ -3288,7 +3520,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                                     break
                                                                 end
                                                             end
-                                                            
+
                                                             task.wait()
 
                                                             --webhooks
@@ -3348,7 +3580,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                                 message = "[BeastHub] "..playerNameWebhook.." | Anti Hatch found: " .. tostring(petName) .. "=" .. tostring(currentNumberKG) .. "KG |Egg hatch # "..tostring(sessionHatchCount)
                                                                 sendDiscordWebhook(webhookURL, message)
                                                             end
-                                                        
+
                                                         elseif (isRare and currentNumberKG < skipHatchRareAboveKG) or (not isRare) then --also add the skip rare threshold here 
                                                             -- print("inside first else if")
                                                             -- if not string.find(koiLoady, "custom") then
@@ -3368,12 +3600,12 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                                     task.wait(1)
                                                                 end          
                                                             -- end
-                                                            
+
                                                             if firstEggHatched == false then
                                                                 beastHubNotify("Hatch delay: "..tostring(Input_delayToHatch.CurrentValue) or "","",3)
                                                                 task.wait(tonumber(Input_delayToHatch.CurrentValue) or 2)
                                                             end
-                                                            
+
                                                             local equipped = equippedPets()
                                                             if equipped and smartAutoHatchingEnabled and isGoodToHatch() then
                                                                 --koi enhance
@@ -3421,7 +3653,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                                         triggerSellAllFruits = false
                                                                         currentlySellingFruits = false
                                                                     end)
-                                                                    
+
                                                                 end
                                                                 if firstEggHatched == false then
                                                                     task.wait(1)
@@ -3470,7 +3702,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                                             --         -- warn("No webhook URL provided for hatch!")
                                                             --     end
                                                             -- end
-                                                        
+
                                                         elseif isRare and currentNumberKG >= skipHatchRareAboveKG and not autoBrontoAntiHatch then
                                                             --anti hatch but not auto bronto
                                                             -- send webhook here
@@ -3503,7 +3735,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                             end
                         end
 
-                        
+
                         --=======================================
                         --trigger auto sell first before back to eagles
                         mainModule.isSafeToPickPlace = false
@@ -3529,7 +3761,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                     myFunctions.switchToLoadout(sealsLoady, getFarmSpawnCFrame, beastHubNotify)
                                     task.wait(2)
                                 end
-                                
+
                                 --sell here + validations
                                 -- local isAutoUnfavToggleActive = getgenv().isAutoUnfavToggleActive
                                 -- local isAutoUnfavModeActive = getgenv().isAutoUnfavModeActive
@@ -3548,7 +3780,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                             -- sendDiscordWebhook("", playerNameWebhook.." not using sell all method: "..curEggName)
                                         end                                    
                                         task.wait(2)
-                                        
+
                                     end)   
 
                                     if success then
@@ -3567,12 +3799,12 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                                     end
                                 end
                                 batchCountForSell = 0 --reset after sell
-                               
+
                             else
                                 beastHubNotify("Selling skipped", "Hatch Count: "..batchCountForSell, 3)
                             end
 
-                            
+
 
 
                             --calculate luck
@@ -3589,7 +3821,7 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                             else
                                 sessionBadLuckCounter = 0
                             end
-                            
+
                         else
                             --this part of logic might not be possible but keeping this for now
                             -- warn("No Seals Loadout found, skipping auto-sell.")
@@ -3606,23 +3838,23 @@ local Toggle_smartAutoHatch = PetEggs:CreateToggle({
                         else
                             myFunctions.techControl.stop = true
                         end
-                        
+
                         switchToHatching(incubatingLoady, getFarmSpawnCFrame, beastHubNotify) --loadout switch was done in the callback of auto sell or here
                         mainModule.isSafeToPickPlace = true
                         -- task.wait(6) 
-                        
+
 
                         --hatch monitor kois/seals
                         -- if webhookKoiSeals then
                         --     sendDiscordWebhook(webhookURL, "[BeastHub] "..playerNameWebhook.." | Koi refund: "..(tostring(koiRefundCount) or "error"))
                         --     sendDiscordWebhook(webhookURL, "[BeastHub] "..playerNameWebhook.." | Seals refund: "..(tostring(sealsRefundCount) or "error"))
                         -- end
-                        
+
                         if webhookEggCount then
                             if fullInventoryAlert > 0 then
                                 sendDiscordWebhook(webhookURL, "[BeastHub] "..playerNameWebhook.." | Max Pet inventory alert!")
                             end
-                            
+
                         end
                         fullInventoryAlert = 0
 
@@ -3714,150 +3946,150 @@ local Toggle_hideOtherFarm = Misc:CreateToggle({
 local autoHidePlantsEnabled = false
 local autoHidePlantsThread = nil
 Misc:CreateToggle({
-	Name = "Auto Hide my Plants",
-	CurrentValue = false,
-	Flag = "autoHidePlants",
-	Callback = function(Value)
-		autoHidePlantsEnabled = Value
+    Name = "Auto Hide my Plants",
+    CurrentValue = false,
+    Flag = "autoHidePlants",
+    Callback = function(Value)
+        autoHidePlantsEnabled = Value
 
-		if autoHidePlantsEnabled then
-			if autoHidePlantsThread then return end
-			beastHubNotify("Auto Hide Plants running", "", 3)
+        if autoHidePlantsEnabled then
+            if autoHidePlantsThread then return end
+            beastHubNotify("Auto Hide Plants running", "", 3)
 
-			autoHidePlantsThread = task.spawn(function()
-				while autoHidePlantsEnabled do
-					local farm = getMyFarm()
-					if farm then
-						local important = farm:FindFirstChild("Important")
-						if important then
-							local plantsPhysical = important:FindFirstChild("Plants_Physical")
-							if plantsPhysical then
-								for _, plant in ipairs(plantsPhysical:GetChildren()) do
-									if plant:IsA("Model") then
-										for _, obj in ipairs(plant:GetDescendants()) do
-											if obj:IsA("BasePart") then
-												obj.LocalTransparencyModifier = 1
-												obj.CanCollide = false
-												obj.CanTouch = false
-												obj.CanQuery = false
-											end
-										end
-									end
-								end
-							end
-						end
-					end
-					task.wait(1)
-				end
-				autoHidePlantsThread = nil
-			end)
+            autoHidePlantsThread = task.spawn(function()
+                while autoHidePlantsEnabled do
+                    local farm = getMyFarm()
+                    if farm then
+                        local important = farm:FindFirstChild("Important")
+                        if important then
+                            local plantsPhysical = important:FindFirstChild("Plants_Physical")
+                            if plantsPhysical then
+                                for _, plant in ipairs(plantsPhysical:GetChildren()) do
+                                    if plant:IsA("Model") then
+                                        for _, obj in ipairs(plant:GetDescendants()) do
+                                            if obj:IsA("BasePart") then
+                                                obj.LocalTransparencyModifier = 1
+                                                obj.CanCollide = false
+                                                obj.CanTouch = false
+                                                obj.CanQuery = false
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait(1)
+                end
+                autoHidePlantsThread = nil
+            end)
 
-		else
-			autoHidePlantsEnabled = false
+        else
+            autoHidePlantsEnabled = false
 
-			local farm = getMyFarm()
-			if farm then
-				local important = farm:FindFirstChild("Important")
-				if important then
-					local plantsPhysical = important:FindFirstChild("Plants_Physical")
-					if plantsPhysical then
-						for _, plant in ipairs(plantsPhysical:GetChildren()) do
-							if plant:IsA("Model") then
-								for _, obj in ipairs(plant:GetDescendants()) do
-									if obj:IsA("BasePart") then
-										obj.LocalTransparencyModifier = 0
-										obj.CanCollide = true
-										obj.CanTouch = true
-										obj.CanQuery = true
-									end
-								end
-							end
-						end
-					end
-				end
-			end
+            local farm = getMyFarm()
+            if farm then
+                local important = farm:FindFirstChild("Important")
+                if important then
+                    local plantsPhysical = important:FindFirstChild("Plants_Physical")
+                    if plantsPhysical then
+                        for _, plant in ipairs(plantsPhysical:GetChildren()) do
+                            if plant:IsA("Model") then
+                                for _, obj in ipairs(plant:GetDescendants()) do
+                                    if obj:IsA("BasePart") then
+                                        obj.LocalTransparencyModifier = 0
+                                        obj.CanCollide = true
+                                        obj.CanTouch = true
+                                        obj.CanQuery = true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
 
-			autoHidePlantsThread = nil
-		end
-	end,
+            autoHidePlantsThread = nil
+        end
+    end,
 })
 
 
 local autoLowGraphicsEnabled = false
 local autoLowGraphicsThreads = {} -- store multiple threads
 Misc:CreateToggle({
-	Name = "Reduce Lag (Web and Fireworks)",
-	CurrentValue = false,
-	Flag = "reduceLag",
-	Callback = function(Value)
-		autoLowGraphicsEnabled = Value
-		if autoLowGraphicsEnabled then
-			if next(autoLowGraphicsThreads) then
-				return
-			end
+    Name = "Reduce Lag (Web and Fireworks)",
+    CurrentValue = false,
+    Flag = "reduceLag",
+    Callback = function(Value)
+        autoLowGraphicsEnabled = Value
+        if autoLowGraphicsEnabled then
+            if next(autoLowGraphicsThreads) then
+                return
+            end
 
-			local function applyUltraAssetCull()
-				for _, v in ipairs(workspace:GetDescendants()) do
-					if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
-						v:Destroy()
-					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-						v.Enabled = false
-					elseif v:IsA("MeshPart") then
-						v.TextureID = ""
-						v.Material = Enum.Material.Plastic
-						v.CastShadow = false
-					elseif v:IsA("UnionOperation") then
-						v:Destroy()
-					elseif v:IsA("BasePart") then
-						if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
-							v.LocalTransparencyModifier = 0.6
-							v.CastShadow = false
-						end
-					end
-				end
-			end
+            local function applyUltraAssetCull()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+                        v:Destroy()
+                    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                        v.Enabled = false
+                    elseif v:IsA("MeshPart") then
+                        v.TextureID = ""
+                        v.Material = Enum.Material.Plastic
+                        v.CastShadow = false
+                    elseif v:IsA("UnionOperation") then
+                        v:Destroy()
+                    elseif v:IsA("BasePart") then
+                        if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
+                            v.LocalTransparencyModifier = 0.6
+                            v.CastShadow = false
+                        end
+                    end
+                end
+            end
 
-			beastHubNotify("Reduce lag active", "", 3)
+            beastHubNotify("Reduce lag active", "", 3)
 
-			-- Thread 1: Clean SpiderWebFX
-			autoLowGraphicsThreads.spiderWeb = task.spawn(function()
-				while autoLowGraphicsEnabled do
-					local spiderFolder = workspace:FindFirstChild("SpiderWebFX")
-					if spiderFolder then
-						spiderFolder:Destroy()
-					end
-					task.wait(0.1)
-				end
-				autoLowGraphicsThreads.spiderWeb = nil
-			end)
+            -- Thread 1: Clean SpiderWebFX
+            autoLowGraphicsThreads.spiderWeb = task.spawn(function()
+                while autoLowGraphicsEnabled do
+                    local spiderFolder = workspace:FindFirstChild("SpiderWebFX")
+                    if spiderFolder then
+                        spiderFolder:Destroy()
+                    end
+                    task.wait(0.1)
+                end
+                autoLowGraphicsThreads.spiderWeb = nil
+            end)
 
-			-- Thread 2: Clean JulyFirework
-			autoLowGraphicsThreads.firework = task.spawn(function()
-				while autoLowGraphicsEnabled do
-					local firework = workspace:FindFirstChild("JulyFirework")
-					if firework then
-						firework:Destroy()
-					end
-					task.wait(0.1)
-				end
-				autoLowGraphicsThreads.firework = nil
-			end)
+            -- Thread 2: Clean JulyFirework
+            autoLowGraphicsThreads.firework = task.spawn(function()
+                while autoLowGraphicsEnabled do
+                    local firework = workspace:FindFirstChild("JulyFirework")
+                    if firework then
+                        firework:Destroy()
+                    end
+                    task.wait(0.1)
+                end
+                autoLowGraphicsThreads.firework = nil
+            end)
 
-			-- Optional: Thread 3 for ultra asset cull (uncomment if needed)
-			-- autoLowGraphicsThreads.assets = task.spawn(function()
-			-- 	while autoLowGraphicsEnabled do
-			-- 		applyUltraAssetCull()
-			-- 		task.wait(60)
-			-- 	end
-			-- 	autoLowGraphicsThreads.assets = nil
-			-- end)
+            -- Optional: Thread 3 for ultra asset cull (uncomment if needed)
+            -- autoLowGraphicsThreads.assets = task.spawn(function()
+            --  while autoLowGraphicsEnabled do
+            --          applyUltraAssetCull()
+            --          task.wait(60)
+            --  end
+            --  autoLowGraphicsThreads.assets = nil
+            -- end)
 
-		else
-			autoLowGraphicsEnabled = false
-			-- clean up thread references
-			autoLowGraphicsThreads = {}
-		end
-	end,
+        else
+            autoLowGraphicsEnabled = false
+            -- clean up thread references
+            autoLowGraphicsThreads = {}
+        end
+    end,
 })
 
 
@@ -3865,49 +4097,49 @@ local autoLowGraphicsEnabledUltra = false
 local autoLowGraphicsEnabledUltraThreads = {}
 
 Misc:CreateToggle({
-	Name = "More lag reduce",
-	CurrentValue = false,
-	Flag = "reduceLagMore",
-	Callback = function(Value)
-		autoLowGraphicsEnabledUltra = Value
-		if autoLowGraphicsEnabledUltra then
-			if autoLowGraphicsEnabledUltraThreads.assets then
-				return
-			end
+    Name = "More lag reduce",
+    CurrentValue = false,
+    Flag = "reduceLagMore",
+    Callback = function(Value)
+        autoLowGraphicsEnabledUltra = Value
+        if autoLowGraphicsEnabledUltra then
+            if autoLowGraphicsEnabledUltraThreads.assets then
+                return
+            end
 
-			local function applyUltraAssetCull()
-				for _, v in ipairs(workspace:GetDescendants()) do
-					if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
-						v:Destroy()
-					elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-						v.Enabled = false
-					elseif v:IsA("MeshPart") then
-						v.TextureID = ""
-						v.Material = Enum.Material.Plastic
-						v.CastShadow = false
-					elseif v:IsA("UnionOperation") then
-						v:Destroy()
-					elseif v:IsA("BasePart") then
-						if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
-							v.LocalTransparencyModifier = 0.6
-							v.CastShadow = false
-						end
-					end
-				end
-			end
+            local function applyUltraAssetCull()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v:IsA("Decal") or v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+                        v:Destroy()
+                    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                        v.Enabled = false
+                    elseif v:IsA("MeshPart") then
+                        v.TextureID = ""
+                        v.Material = Enum.Material.Plastic
+                        v.CastShadow = false
+                    elseif v:IsA("UnionOperation") then
+                        v:Destroy()
+                    elseif v:IsA("BasePart") then
+                        if not v:IsDescendantOf(game.Players.LocalPlayer.Character) then
+                            v.LocalTransparencyModifier = 0.6
+                            v.CastShadow = false
+                        end
+                    end
+                end
+            end
 
-			autoLowGraphicsEnabledUltraThreads.assets = task.spawn(function()
-				while autoLowGraphicsEnabledUltra do
-					applyUltraAssetCull()
-					task.wait(60)
-				end
-				autoLowGraphicsEnabledUltraThreads.assets = nil
-			end)
-		else
-			autoLowGraphicsEnabledUltra = false
-			autoLowGraphicsEnabledUltraThreads = {}
-		end
-	end,
+            autoLowGraphicsEnabledUltraThreads.assets = task.spawn(function()
+                while autoLowGraphicsEnabledUltra do
+                    applyUltraAssetCull()
+                    task.wait(60)
+                end
+                autoLowGraphicsEnabledUltraThreads.assets = nil
+            end)
+        else
+            autoLowGraphicsEnabledUltra = false
+            autoLowGraphicsEnabledUltraThreads = {}
+        end
+    end,
 })
 
 
@@ -3929,18 +4161,18 @@ Misc:CreateToggle({
             task.wait(0.5)
         end
         task.wait(3)
-        
+
         beastHubNotifsEnabled = Value
     end,
 })
 
 Misc:CreateToggle({
-	Name = "Game Notifications (including trade notifs)",
-	CurrentValue = true,
-	Flag = "gameNotifs",
-	Callback = function(Value)
-		local player = game.Players.LocalPlayer
-		local playerGui = player:WaitForChild("PlayerGui")
+    Name = "Game Notifications (including trade notifs)",
+    CurrentValue = true,
+    Flag = "gameNotifs",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        local playerGui = player:WaitForChild("PlayerGui")
 
         --new
         local start = tick()
@@ -3955,12 +4187,12 @@ Misc:CreateToggle({
         end
         task.wait(3)
 
-		for _, gui in ipairs(playerGui:GetChildren()) do
-			if gui:IsA("ScreenGui") and gui.Name:match("Notification") then
-				gui.Enabled = Value -- enable if toggle is ON, disable if OFF
-			end
-		end
-	end,
+        for _, gui in ipairs(playerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Name:match("Notification") then
+                gui.Enabled = Value -- enable if toggle is ON, disable if OFF
+            end
+        end
+    end,
 })
 Misc:CreateDivider()
 
@@ -4077,7 +4309,7 @@ Misc:CreateToggle({
     Flag = "autoAscend",
     Callback = function(Value)
         autoAscendRunning = Value
-        
+
         -- wait for UI to load, new retry method
         local start = tick()
         local maxWait = 10
@@ -4089,7 +4321,7 @@ Misc:CreateToggle({
             end
             task.wait(0.5)
         end
-        
+
         task.wait(3)
 
         task.spawn(function()
@@ -4099,7 +4331,7 @@ Misc:CreateToggle({
                 for i = 1, ascendMulti do
                     game:GetService("ReplicatedStorage").GameEvents.BuyRebirth:FireServer()
                 end
-                
+
                 -- The main interval remains untouched
                 task.wait(300)
             end
@@ -4116,91 +4348,91 @@ local disconnectEnabled = false
 local firedDisconnect = false
 local menuWatcherThread = nil
 Misc:CreateToggle({
-	Name = "Webhook on Disconnect",
-	CurrentValue = false,
-	Flag = "webhookDisconnection",
-	Callback = function(Value)
-		disconnectEnabled = Value
-		if disconnectEnabled then
-			if menuWatcherThread then
-				return
-			end
-			firedDisconnect = false
-			menuWatcherThread = task.spawn(function()
-				local GuiService = game:GetService("GuiService")
-				local CoreGui = game:GetService("CoreGui")
-				local lastMenuState = false
-				local dcText = ""
-				local flags = {
-					"Error Code",
-					"Reconnect"
-				}
-				local excludeFlags = {
-					"772"
-				}
-				local function scanScreenGui(gui)
-					for _, v in ipairs(gui:GetDescendants()) do
-						if v:IsA("TextLabel") or v:IsA("TextButton") then
-							if v.Visible then
-								local txt = v.Text
-								if type(txt) == "string" and txt ~= "" then
-									local matched = false
-									for _, flag in ipairs(flags) do
-										if string.find(txt, flag, 1, true) then
-											matched = true
-											break
-										end
-									end
-									if matched then
-										for _, exFlag in ipairs(excludeFlags) do
-											if string.find(txt, exFlag, 1, true) then
-												matched = false
-												break
-											end
-										end
-									end
-									if matched then
-										dcText = txt
-										return true
-									end
-								end
-							end
-						end
-					end
-					return false
-				end
-				while disconnectEnabled do
-					local menuOpen = GuiService.MenuIsOpen
-					if menuOpen and not lastMenuState and not firedDisconnect then
-						for _, child in ipairs(CoreGui:GetChildren()) do
-							if child:IsA("ScreenGui") then
-								if scanScreenGui(child) then
-									firedDisconnect = true
-									if webhookURL and autoRejoinOnDC then
-										for i = 1, 9999 do
-											sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
-											sendDiscordWebhook(webhookURL, "Auto rejoin triggered")
-											myFunctions.delayedRejoin(0.001)
-											task.wait(5)
-										end
-									elseif webhookURL then
-										sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
-									end
-									break
-								end
-							end
-						end
-					end
-					lastMenuState = menuOpen
-					task.wait(0.2)
-				end
-				menuWatcherThread = nil
-			end)
-		else
-			disconnectEnabled = false
-			firedDisconnect = false
-		end
-	end
+    Name = "Webhook on Disconnect",
+    CurrentValue = false,
+    Flag = "webhookDisconnection",
+    Callback = function(Value)
+        disconnectEnabled = Value
+        if disconnectEnabled then
+            if menuWatcherThread then
+                return
+            end
+            firedDisconnect = false
+            menuWatcherThread = task.spawn(function()
+                local GuiService = game:GetService("GuiService")
+                local CoreGui = game:GetService("CoreGui")
+                local lastMenuState = false
+                local dcText = ""
+                local flags = {
+                    "Error Code",
+                    "Reconnect"
+                }
+                local excludeFlags = {
+                    "772"
+                }
+                local function scanScreenGui(gui)
+                    for _, v in ipairs(gui:GetDescendants()) do
+                        if v:IsA("TextLabel") or v:IsA("TextButton") then
+                            if v.Visible then
+                                local txt = v.Text
+                                if type(txt) == "string" and txt ~= "" then
+                                    local matched = false
+                                    for _, flag in ipairs(flags) do
+                                        if string.find(txt, flag, 1, true) then
+                                            matched = true
+                                            break
+                                        end
+                                    end
+                                    if matched then
+                                        for _, exFlag in ipairs(excludeFlags) do
+                                            if string.find(txt, exFlag, 1, true) then
+                                                matched = false
+                                                break
+                                            end
+                                        end
+                                    end
+                                    if matched then
+                                        dcText = txt
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    return false
+                end
+                while disconnectEnabled do
+                    local menuOpen = GuiService.MenuIsOpen
+                    if menuOpen and not lastMenuState and not firedDisconnect then
+                        for _, child in ipairs(CoreGui:GetChildren()) do
+                            if child:IsA("ScreenGui") then
+                                if scanScreenGui(child) then
+                                    firedDisconnect = true
+                                    if webhookURL and autoRejoinOnDC then
+                                        for i = 1, 9999 do
+                                            sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
+                                            sendDiscordWebhook(webhookURL, "Auto rejoin triggered")
+                                            myFunctions.delayedRejoin(0.001)
+                                            task.wait(5)
+                                        end
+                                    elseif webhookURL then
+                                        sendDiscordWebhookEmbedDisconnection(webhookURL, tostring(dcText))
+                                    end
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    lastMenuState = menuOpen
+                    task.wait(0.2)
+                end
+                menuWatcherThread = nil
+            end)
+        else
+            disconnectEnabled = false
+            firedDisconnect = false
+        end
+    end
 })
 
 
@@ -4209,12 +4441,12 @@ Misc:CreateToggle({
 
 
 Misc:CreateToggle({
-	Name = "Auto Rejoin on Disconnect",
-	CurrentValue = false,
-	Flag = "autoRejoinDisconnect",
-	Callback = function(Value)
+    Name = "Auto Rejoin on Disconnect",
+    CurrentValue = false,
+    Flag = "autoRejoinDisconnect",
+    Callback = function(Value)
         autoRejoinOnDC = Value
-	end,
+    end,
 })
 
 Misc:CreateDivider()
